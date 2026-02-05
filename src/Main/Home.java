@@ -163,7 +163,7 @@ public class Home extends javax.swing.JFrame {
         jLabel4.setForeground(new java.awt.Color(255, 255, 255));
         jLabel4.setText("Protecting Communities & Wild Life");
 
-        jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/image/home.jpg"))); // NOI18N
+        jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/image/logo1.jpg"))); // NOI18N
 
         registerbtn.setBackground(new java.awt.Color(255, 153, 0));
         registerbtn.setFont(new java.awt.Font("Arial", 1, 14)); // NOI18N
