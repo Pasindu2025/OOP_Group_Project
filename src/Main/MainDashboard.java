@@ -14,11 +14,11 @@ public class MainDashboard extends javax.swing.JFrame {
         }
     }
 
-public class Main {
-    public static void main(String[] args) {
-        new Login().setVisible(true);
+    public class Main {
+        public static void main(String[] args) {
+            new Login().setVisible(true);
+        }
     }
-}
 
 
     @SuppressWarnings("unchecked")
