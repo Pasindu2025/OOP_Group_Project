@@ -2,7 +2,7 @@
 package Main;
 
 import javax.swing.JFrame;
-
+import forgetPassword.forgetpassword;
 
 public class Login extends javax.swing.JFrame {
 
@@ -16,7 +16,7 @@ public class Login extends javax.swing.JFrame {
 
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">                          
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">
     private void initComponents() {
 
         jPanel2 = new javax.swing.JPanel();
@@ -37,7 +37,7 @@ public class Login extends javax.swing.JFrame {
         login_btn = new javax.swing.JButton();
         aboutus_btn = new javax.swing.JButton();
         jLabel11 = new javax.swing.JLabel();
-        jTextField2 = new javax.swing.JTextField();
+        jLabel5 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
@@ -87,10 +87,20 @@ public class Login extends javax.swing.JFrame {
 
         registerbtn.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
         registerbtn.setText("Register");
+        registerbtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                registerbtnActionPerformed(evt);
+            }
+        });
         jPanel4.add(registerbtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 380, 410, -1));
 
         forgetbtn.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
         forgetbtn.setText("Forget Password");
+        forgetbtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                forgetbtnActionPerformed(evt);
+            }
+        });
         jPanel4.add(forgetbtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 460, 410, -1));
 
         usernamefeild.setFont(new java.awt.Font("Times New Roman", 0, 18)); // NOI18N
@@ -109,11 +119,19 @@ public class Login extends javax.swing.JFrame {
         jPanel3.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         home_btn.setBackground(new java.awt.Color(0, 0, 0));
-        home_btn.setFont(new java.awt.Font("Arial", 1, 16)); // NOI18N
+        home_btn.setFont(new java.awt.Font("Poppins", 1, 16)); // NOI18N
         home_btn.setForeground(new java.awt.Color(255, 255, 255));
         home_btn.setText("HOME");
         home_btn.setBorder(null);
         home_btn.setContentAreaFilled(false);
+        home_btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                home_btnMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                home_btnMouseExited(evt);
+            }
+        });
         home_btn.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 home_btnActionPerformed(evt);
@@ -122,11 +140,19 @@ public class Login extends javax.swing.JFrame {
         jPanel3.add(home_btn, new org.netbeans.lib.awtextra.AbsoluteConstraints(980, 30, -1, -1));
 
         reg_btn.setBackground(new java.awt.Color(0, 0, 0));
-        reg_btn.setFont(new java.awt.Font("Arial", 1, 16)); // NOI18N
+        reg_btn.setFont(new java.awt.Font("Poppins", 1, 16)); // NOI18N
         reg_btn.setForeground(new java.awt.Color(255, 255, 255));
         reg_btn.setText("REGISTER");
         reg_btn.setBorder(null);
         reg_btn.setContentAreaFilled(false);
+        reg_btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                reg_btnMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                reg_btnMouseExited(evt);
+            }
+        });
         reg_btn.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 reg_btnActionPerformed(evt);
@@ -135,11 +161,19 @@ public class Login extends javax.swing.JFrame {
         jPanel3.add(reg_btn, new org.netbeans.lib.awtextra.AbsoluteConstraints(1070, 30, -1, -1));
 
         login_btn.setBackground(new java.awt.Color(0, 0, 0));
-        login_btn.setFont(new java.awt.Font("Arial", 1, 16)); // NOI18N
+        login_btn.setFont(new java.awt.Font("Poppins", 1, 16)); // NOI18N
         login_btn.setForeground(new java.awt.Color(255, 255, 255));
         login_btn.setText("LOGIN");
         login_btn.setBorder(null);
         login_btn.setContentAreaFilled(false);
+        login_btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                login_btnMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                login_btnMouseExited(evt);
+            }
+        });
         login_btn.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 login_btnActionPerformed(evt);
@@ -148,11 +182,19 @@ public class Login extends javax.swing.JFrame {
         jPanel3.add(login_btn, new org.netbeans.lib.awtextra.AbsoluteConstraints(1190, 30, -1, -1));
 
         aboutus_btn.setBackground(new java.awt.Color(0, 0, 0));
-        aboutus_btn.setFont(new java.awt.Font("Arial", 1, 16)); // NOI18N
+        aboutus_btn.setFont(new java.awt.Font("Poppins", 1, 16)); // NOI18N
         aboutus_btn.setForeground(new java.awt.Color(255, 255, 255));
         aboutus_btn.setText("ABOUT US");
         aboutus_btn.setBorder(null);
         aboutus_btn.setContentAreaFilled(false);
+        aboutus_btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                aboutus_btnMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                aboutus_btnMouseExited(evt);
+            }
+        });
         aboutus_btn.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 aboutus_btnActionPerformed(evt);
@@ -163,22 +205,15 @@ public class Login extends javax.swing.JFrame {
         jLabel11.setIcon(new javax.swing.ImageIcon(getClass().getResource("/image/logo.png"))); // NOI18N
         jPanel3.add(jLabel11, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 90, 90));
 
-        jTextField2.setBackground(new java.awt.Color(0, 0, 0));
-        jTextField2.setFont(new java.awt.Font("Script MT Bold", 1, 48)); // NOI18N
-        jTextField2.setForeground(new java.awt.Color(255, 255, 255));
-        jTextField2.setText("Efind");
-        jTextField2.setBorder(null);
-        jTextField2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jTextField2ActionPerformed(evt);
-            }
-        });
-        jPanel3.add(jTextField2, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 10, 150, -1));
+        jLabel5.setFont(new java.awt.Font("Script MT Bold", 1, 45)); // NOI18N
+        jLabel5.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel5.setText("Efind");
+        jPanel3.add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 10, 210, -1));
 
         getContentPane().add(jPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 1550, -1));
 
         pack();
-    }// </editor-fold>                        
+    }// </editor-fold>
 
     private void loginbtnActionPerformed(java.awt.event.ActionEvent evt) {
         // TODO add your handling code here:
@@ -208,12 +243,52 @@ public class Login extends javax.swing.JFrame {
         this.dispose();
     }
 
-    private void jTextField2ActionPerformed(java.awt.event.ActionEvent evt) {
+    private void usernamefeildActionPerformed(java.awt.event.ActionEvent evt) {
         // TODO add your handling code here:
     }
 
-    private void usernamefeildActionPerformed(java.awt.event.ActionEvent evt) {
-        // TODO add your handling code here:
+    private void home_btnMouseEntered(java.awt.event.MouseEvent evt) {
+        home_btn.setForeground(new java.awt.Color(255,153,0));
+    }
+
+    private void home_btnMouseExited(java.awt.event.MouseEvent evt) {
+        home_btn.setForeground(java.awt.Color.WHITE);
+    }
+
+    private void reg_btnMouseEntered(java.awt.event.MouseEvent evt) {
+        reg_btn.setForeground(new java.awt.Color(255,153,0));
+    }
+
+    private void reg_btnMouseExited(java.awt.event.MouseEvent evt) {
+        reg_btn.setForeground(java.awt.Color.WHITE);
+    }
+
+    private void login_btnMouseEntered(java.awt.event.MouseEvent evt) {
+        login_btn.setForeground(new java.awt.Color(255,153,0));
+    }
+
+    private void login_btnMouseExited(java.awt.event.MouseEvent evt) {
+        login_btn.setForeground(java.awt.Color.WHITE);
+    }
+
+    private void aboutus_btnMouseEntered(java.awt.event.MouseEvent evt) {
+        aboutus_btn.setForeground(new java.awt.Color(255,153,0));
+    }
+
+    private void aboutus_btnMouseExited(java.awt.event.MouseEvent evt) {
+        aboutus_btn.setForeground(java.awt.Color.WHITE);
+    }
+
+    private void registerbtnActionPerformed(java.awt.event.ActionEvent evt) {
+        Register reg = new Register();
+        reg.setVisible(true);
+        this.dispose();
+    }
+
+    private void forgetbtnActionPerformed(java.awt.event.ActionEvent evt) {
+        forgetpassword fp = new forgetpassword();
+        fp.setVisible(true);
+        this.dispose();
     }
 
     /**
@@ -241,18 +316,18 @@ public class Login extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(() -> new Login().setVisible(true));
     }
 
-    // Variables declaration - do not modify                     
+    // Variables declaration - do not modify
     private javax.swing.JButton aboutus_btn;
     private javax.swing.JButton forgetbtn;
     private javax.swing.JButton home_btn;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
-    private javax.swing.JTextField jTextField2;
     private javax.swing.JButton login_btn;
     private javax.swing.JButton loginbtn;
     private javax.swing.JLabel pword;
