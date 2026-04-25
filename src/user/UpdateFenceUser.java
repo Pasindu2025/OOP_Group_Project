@@ -1,5 +1,5 @@
 
-package user;
+package User;
 
 import Main.AboutUs;
 import Main.Home;
