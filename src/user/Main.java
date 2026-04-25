@@ -10,23 +10,26 @@ import com.formdev.flatlaf.FlatDarkLaf;
 import java.awt.Color;
 import javax.swing.BorderFactory;
 import javax.swing.UIManager;
+import Main.Home;
 /**
  *
  * @author G
  */
 public class Main extends javax.swing.JFrame {
-    
+
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Main.class.getName());
 
     /**
      * Creates new form Main
      */
-    
+
     public Main() {
         initComponents();
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
+        this.setLocationRelativeTo(null);
     }
- private void showSafetyGuidelines() {
-    String guidelines = """
+    private void showSafetyGuidelines() {
+        String guidelines = """
         Safety Guidelines:
         
         1. Wear helmets and protective gear when near elephants.
@@ -36,49 +39,49 @@ public class Main extends javax.swing.JFrame {
         5. Do not provoke or feed wild elephants.
         """;
 
-    javax.swing.JOptionPane.showMessageDialog(
-        this, // parent component
-        guidelines,
-        "Safety Guidelines",
-        javax.swing.JOptionPane.INFORMATION_MESSAGE
-    );
-}
- 
+        javax.swing.JOptionPane.showMessageDialog(
+                this, // parent component
+                guidelines,
+                "Safety Guidelines",
+                javax.swing.JOptionPane.INFORMATION_MESSAGE
+        );
+    }
+
     private void showConflictStatistics() {
-    // Load image from resources
-    javax.swing.ImageIcon originalIcon = new javax.swing.ImageIcon(
-     getClass().getResource("/User/pictures/HE conflict.jpg")
-    );
+        // Load image from resources
+        javax.swing.ImageIcon originalIcon = new javax.swing.ImageIcon(
+                getClass().getResource("/User/pictures/HE conflict.jpg")
+        );
 
-    // Scale the image to 500x350
-    java.awt.Image scaledImage = originalIcon.getImage().getScaledInstance(500, 350, java.awt.Image.SCALE_SMOOTH);
-    javax.swing.ImageIcon icon = new javax.swing.ImageIcon(scaledImage);
+        // Scale the image to 500x350
+        java.awt.Image scaledImage = originalIcon.getImage().getScaledInstance(500, 350, java.awt.Image.SCALE_SMOOTH);
+        javax.swing.ImageIcon icon = new javax.swing.ImageIcon(scaledImage);
 
-    // Create JLabel with image
-    javax.swing.JLabel imageLabel = new javax.swing.JLabel(icon);
-    imageLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        // Create JLabel with image
+        javax.swing.JLabel imageLabel = new javax.swing.JLabel(icon);
+        imageLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
 
-    // Caption below the image
-    javax.swing.JLabel caption = new javax.swing.JLabel("Elephant-Human Conflict Statistics");
-    caption.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-    caption.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 22)); // bigger font
-    caption.setForeground(new java.awt.Color(255, 255, 255));
+        // Caption below the image
+        javax.swing.JLabel caption = new javax.swing.JLabel("Elephant-Human Conflict Statistics");
+        caption.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        caption.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 22)); // bigger font
+        caption.setForeground(new java.awt.Color(255, 255, 255));
 
-    // Panel to hold image + caption
-    javax.swing.JPanel panel = new javax.swing.JPanel(new java.awt.BorderLayout());
-    panel.setBackground(new java.awt.Color(30, 30, 30)); // dark theme
-    panel.add(imageLabel, java.awt.BorderLayout.CENTER);
-    panel.add(caption, java.awt.BorderLayout.SOUTH);
-    panel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10)); // padding
+        // Panel to hold image + caption
+        javax.swing.JPanel panel = new javax.swing.JPanel(new java.awt.BorderLayout());
+        panel.setBackground(new java.awt.Color(30, 30, 30)); // dark theme
+        panel.add(imageLabel, java.awt.BorderLayout.CENTER);
+        panel.add(caption, java.awt.BorderLayout.SOUTH);
+        panel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10)); // padding
 
-    // Dialog to display panel
-    javax.swing.JDialog dialog = new javax.swing.JDialog(this, "Conflict Statistics", true);
-    dialog.getContentPane().add(panel);
-    dialog.pack(); // fit content
-    dialog.setResizable(false);
-    dialog.setLocationRelativeTo(this); // center on main frame
-    dialog.setVisible(true);
-}
+        // Dialog to display panel
+        javax.swing.JDialog dialog = new javax.swing.JDialog(this, "Conflict Statistics", true);
+        dialog.getContentPane().add(panel);
+        dialog.pack(); // fit content
+        dialog.setResizable(false);
+        dialog.setLocationRelativeTo(this); // center on main frame
+        dialog.setVisible(true);
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -86,7 +89,7 @@ public class Main extends javax.swing.JFrame {
      * regenerated by the Form Editor.
      */
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">
     private void initComponents() {
         java.awt.GridBagConstraints gridBagConstraints;
 
@@ -97,8 +100,8 @@ public class Main extends javax.swing.JFrame {
         jLabel13 = new javax.swing.JLabel();
         headerRpanel = new javax.swing.JPanel();
         homebtn = new javax.swing.JButton();
+        dashbtn = new javax.swing.JButton();
         logoutbtn = new javax.swing.JButton();
-        aboutbtn = new javax.swing.JButton();
         filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(6, 0), new java.awt.Dimension(6, 0), new java.awt.Dimension(6, 32767));
         filler4 = new javax.swing.Box.Filler(new java.awt.Dimension(10, 0), new java.awt.Dimension(10, 0), new java.awt.Dimension(10, 32767));
         filler5 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
@@ -174,6 +177,7 @@ public class Main extends javax.swing.JFrame {
         headerRpanel.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         headerRpanel.setPreferredSize(new java.awt.Dimension(300, 0));
 
+        homebtn.setFont(new java.awt.Font("Poppins", 1, 16)); // NOI18N
         homebtn.setForeground(new java.awt.Color(255, 255, 255));
         homebtn.setText("HOME");
         homebtn.setAlignmentX(1.0F);
@@ -182,8 +186,41 @@ public class Main extends javax.swing.JFrame {
         homebtn.setContentAreaFilled(false);
         homebtn.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         homebtn.setFocusPainted(false);
+        homebtn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                homebtnMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                homebtnMouseExited(evt);
+            }
+        });
         headerRpanel.add(homebtn);
 
+        dashbtn.setFont(new java.awt.Font("Poppins", 1, 16)); // NOI18N
+        dashbtn.setForeground(new java.awt.Color(255, 255, 255));
+        dashbtn.setText("DASHBOARD");
+        dashbtn.setAlignmentX(1.0F);
+        dashbtn.setBorder(javax.swing.BorderFactory.createEmptyBorder(30, 10, 1, 0));
+        dashbtn.setBorderPainted(false);
+        dashbtn.setContentAreaFilled(false);
+        dashbtn.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        dashbtn.setFocusPainted(false);
+        dashbtn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                dashbtnMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                dashbtnMouseExited(evt);
+            }
+        });
+        dashbtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                dashbtnActionPerformed(evt);
+            }
+        });
+        headerRpanel.add(dashbtn);
+
+        logoutbtn.setFont(new java.awt.Font("Poppins", 1, 16)); // NOI18N
         logoutbtn.setForeground(new java.awt.Color(255, 255, 255));
         logoutbtn.setText("LOG OUT");
         logoutbtn.setAlignmentX(1.0F);
@@ -192,21 +229,20 @@ public class Main extends javax.swing.JFrame {
         logoutbtn.setContentAreaFilled(false);
         logoutbtn.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         logoutbtn.setFocusPainted(false);
-        headerRpanel.add(logoutbtn);
-
-        aboutbtn.setForeground(new java.awt.Color(255, 255, 255));
-        aboutbtn.setText("ABOUT US");
-        aboutbtn.setAlignmentX(1.0F);
-        aboutbtn.setBorder(javax.swing.BorderFactory.createEmptyBorder(30, 10, 1, 0));
-        aboutbtn.setBorderPainted(false);
-        aboutbtn.setContentAreaFilled(false);
-        aboutbtn.setFocusPainted(false);
-        aboutbtn.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                aboutbtnActionPerformed(evt);
+        logoutbtn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                logoutbtnMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                logoutbtnMouseExited(evt);
             }
         });
-        headerRpanel.add(aboutbtn);
+        logoutbtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                logoutbtnActionPerformed(evt);
+            }
+        });
+        headerRpanel.add(logoutbtn);
         headerRpanel.add(filler1);
         headerRpanel.add(filler4);
         headerRpanel.add(filler5);
@@ -247,6 +283,9 @@ public class Main extends javax.swing.JFrame {
 
         cardPanel1.setBackground(new java.awt.Color(50, 50, 50));
         cardPanel1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                cardPanel1MouseClicked(evt);
+            }
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 cardPanel1MouseEntered(evt);
             }
@@ -282,7 +321,7 @@ public class Main extends javax.swing.JFrame {
 
         jLabel11.setForeground(new java.awt.Color(255, 255, 255));
         jLabel11.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel11.setText("View elephant-human conflict trends");
+        jLabel11.setText("View current elephant activity");
         jLabel11.setAlignmentX(0.5F);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
@@ -301,6 +340,9 @@ public class Main extends javax.swing.JFrame {
 
         cardPanel2.setPreferredSize(new java.awt.Dimension(150, 67));
         cardPanel2.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                cardPanel2MouseClicked(evt);
+            }
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 cardPanel2MouseEntered(evt);
             }
@@ -326,7 +368,7 @@ public class Main extends javax.swing.JFrame {
 
         jLabel12.setForeground(new java.awt.Color(255, 255, 255));
         jLabel12.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel12.setText("View elephant-human conflict trends");
+        jLabel12.setText("Track perimeter breach status");
         jLabel12.setAlignmentX(0.5F);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
@@ -422,7 +464,7 @@ public class Main extends javax.swing.JFrame {
 
         jLabel10.setForeground(new java.awt.Color(255, 255, 255));
         jLabel10.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel10.setText("View elephant-human conflict trends");
+        jLabel10.setText("Access emergency safety protocols");
         jLabel10.setAlignmentX(0.5F);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
@@ -519,94 +561,140 @@ public class Main extends javax.swing.JFrame {
         getContentPane().add(rootPanel, java.awt.BorderLayout.CENTER);
 
         pack();
-    }// </editor-fold>//GEN-END:initComponents
- 
-    private void cardPanel3MouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cardPanel3MouseExited
+    }// </editor-fold>
+
+    private void cardPanel3MouseExited(java.awt.event.MouseEvent evt) {
         cardPanel3.setBackground(new Color(40, 40, 40));
         cardPanel3.setBorder(BorderFactory.createEmptyBorder(1,1,1,1));
-    }//GEN-LAST:event_cardPanel3MouseExited
+    }
 
-    private void cardPanel3MouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cardPanel3MouseEntered
+    private void cardPanel3MouseEntered(java.awt.event.MouseEvent evt) {
         cardPanel3.setBackground(new Color(36, 36, 36));
         cardPanel3.setBorder(BorderFactory.createLineBorder(new Color(79,195,247), 1));
-    }//GEN-LAST:event_cardPanel3MouseEntered
+    }
 
-    private void cardPanel2MouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cardPanel2MouseExited
+    private void cardPanel2MouseExited(java.awt.event.MouseEvent evt) {
         cardPanel2.setBackground(new Color(40, 40, 40));
         cardPanel2.setBorder(BorderFactory.createEmptyBorder(1,1,1,1));
-    }//GEN-LAST:event_cardPanel2MouseExited
+    }
 
-    private void cardPanel2MouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cardPanel2MouseEntered
+    private void cardPanel2MouseEntered(java.awt.event.MouseEvent evt) {
         cardPanel2.setBackground(new Color(36, 36, 36));
         cardPanel2.setBorder(BorderFactory.createLineBorder(new Color(79,195,247), 1));
-    }//GEN-LAST:event_cardPanel2MouseEntered
+    }
 
-    private void cardPanel1MouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cardPanel1MouseExited
+    private void cardPanel1MouseExited(java.awt.event.MouseEvent evt) {
         cardPanel1.setBackground(new Color(40, 40, 40));
         cardPanel1.setBorder(BorderFactory.createEmptyBorder(1,1,1,1));
-    }//GEN-LAST:event_cardPanel1MouseExited
+    }
 
-    private void cardPanel1MouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cardPanel1MouseEntered
+    private void cardPanel1MouseEntered(java.awt.event.MouseEvent evt) {
         cardPanel1.setBackground(new Color(36, 36, 36));
         cardPanel1.setBorder(BorderFactory.createLineBorder(new Color(79,195,247), 1));
-    }//GEN-LAST:event_cardPanel1MouseEntered
+    }
 
-    private void ActiveEleMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_ActiveEleMouseExited
+    private void ActiveEleMouseExited(java.awt.event.MouseEvent evt) {
         // TODO add your handling code here:
-    }//GEN-LAST:event_ActiveEleMouseExited
+    }
 
-    private void ActiveEleMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_ActiveEleMouseEntered
+    private void ActiveEleMouseEntered(java.awt.event.MouseEvent evt) {
         ActiveEle.setBackground(new java.awt.Color(255, 20, 50));// TODO add your handling code here:
-    }//GEN-LAST:event_ActiveEleMouseEntered
+    }
 
-    private void aboutbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_aboutbtnActionPerformed
+    private void dashbtnActionPerformed(java.awt.event.ActionEvent evt) {
         // TODO add your handling code here:
-    }//GEN-LAST:event_aboutbtnActionPerformed
+    }
 
-    private void cardcontentpanel4MouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cardcontentpanel4MouseEntered
+    private void cardcontentpanel4MouseEntered(java.awt.event.MouseEvent evt) {
         cardPanel4.setBackground(new Color(36, 36, 36));
         cardPanel4.setBorder(BorderFactory.createLineBorder(new Color(79,195,247), 1));
-    }//GEN-LAST:event_cardcontentpanel4MouseEntered
+    }
 
-    private void cardcontentpanel4MouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cardcontentpanel4MouseExited
-       cardPanel4.setBackground(new Color(40, 40, 40));
-       cardPanel4.setBorder(BorderFactory.createEmptyBorder(1,1,1,1));
-    }//GEN-LAST:event_cardcontentpanel4MouseExited
+    private void cardcontentpanel4MouseExited(java.awt.event.MouseEvent evt) {
+        cardPanel4.setBackground(new Color(40, 40, 40));
+        cardPanel4.setBorder(BorderFactory.createEmptyBorder(1,1,1,1));
+    }
 
-    private void cardPanel4MouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cardPanel4MouseEntered
-      
-    }//GEN-LAST:event_cardPanel4MouseEntered
+    private void cardPanel4MouseEntered(java.awt.event.MouseEvent evt) {
 
-    private void cardPanel4MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cardPanel4MouseClicked
-          showSafetyGuidelines();
-    }//GEN-LAST:event_cardPanel4MouseClicked
+    }
 
-    private void cardcontentpanel4MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cardcontentpanel4MouseClicked
-           showSafetyGuidelines();
-    }//GEN-LAST:event_cardcontentpanel4MouseClicked
+    private void cardPanel4MouseClicked(java.awt.event.MouseEvent evt) {
+        showSafetyGuidelines();
+    }
 
-    private void cardPanel3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cardPanel3MouseClicked
-           showConflictStatistics();
-    }//GEN-LAST:event_cardPanel3MouseClicked
+    private void cardcontentpanel4MouseClicked(java.awt.event.MouseEvent evt) {
+        showSafetyGuidelines();
+    }
 
-    private void cardcontentpanel3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cardcontentpanel3MouseClicked
-      showConflictStatistics();
-    }//GEN-LAST:event_cardcontentpanel3MouseClicked
+    private void cardPanel3MouseClicked(java.awt.event.MouseEvent evt) {
+        showConflictStatistics();
+    }
+
+    private void cardcontentpanel3MouseClicked(java.awt.event.MouseEvent evt) {
+        showConflictStatistics();
+    }
+
+    private void homebtnMouseEntered(java.awt.event.MouseEvent evt) {
+        homebtn.setForeground(new java.awt.Color(255, 153, 0));
+
+    }
+
+    private void homebtnMouseExited(java.awt.event.MouseEvent evt) {
+        homebtn.setForeground(java.awt.Color.WHITE);
+
+    }
+
+    private void logoutbtnMouseEntered(java.awt.event.MouseEvent evt) {
+        logoutbtn.setForeground(new java.awt.Color(255, 153, 0));
+
+    }
+
+    private void dashbtnMouseEntered(java.awt.event.MouseEvent evt) {
+        dashbtn.setForeground(new java.awt.Color(255, 153, 0));
+
+    }
+
+    private void dashbtnMouseExited(java.awt.event.MouseEvent evt) {
+        dashbtn.setForeground(java.awt.Color.WHITE);
+
+    }
+
+    private void logoutbtnMouseExited(java.awt.event.MouseEvent evt) {
+        logoutbtn.setForeground(java.awt.Color.WHITE);
+
+    }
+
+    private void cardPanel1MouseClicked(java.awt.event.MouseEvent evt) {
+        new ReportElephantUser().setVisible(true);
+        this.dispose();
+    }
+
+    private void cardPanel2MouseClicked(java.awt.event.MouseEvent evt) {
+        new UpdateFenceUser().setVisible(true);
+        this.dispose();
+    }
+
+    private void logoutbtnActionPerformed(java.awt.event.ActionEvent evt) {
+        new Home().setVisible(true);
+        this.dispose();
+    }
+
 
     /**
      * @param args the command line arguments
      */
-    
+
 
     public static void main(String args[]) {
-       try {
-    UIManager.setLookAndFeel(new com.formdev.flatlaf.FlatDarkLaf());
-    } catch (Exception ex) {
-    System.err.println("Failed to initialize LaF");
-}
+        try {
+            UIManager.setLookAndFeel(new com.formdev.flatlaf.FlatDarkLaf());
+        } catch (Exception ex) {
+            System.err.println("Failed to initialize LaF");
+        }
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
@@ -625,12 +713,11 @@ public class Main extends javax.swing.JFrame {
         FlatDarkLaf.setup();
         new Main().setVisible(true);
     }
-    
 
-    // Variables declaration - do not modify//GEN-BEGIN:variables
+
+    // Variables declaration - do not modify
     private javax.swing.JLabel ActiveEle;
     private javax.swing.JPanel HeaderPanel;
-    private javax.swing.JButton aboutbtn;
     private javax.swing.JPanel bodyPanel;
     private User.RoundedPanel cardPanel1;
     private User.RoundedPanel cardPanel2;
@@ -640,6 +727,7 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JPanel cardcontentpanel2;
     private javax.swing.JPanel cardcontentpanel3;
     private javax.swing.JPanel cardcontentpanel4;
+    private javax.swing.JButton dashbtn;
     private javax.swing.JPanel featurePanel;
     private javax.swing.Box.Filler filler1;
     private javax.swing.Box.Filler filler4;
@@ -676,5 +764,5 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JPanel titlepanel;
     private javax.swing.JPanel welcomePanel;
     private javax.swing.JLabel welcometext;
-    // End of variables declaration//GEN-END:variables
+    // End of variables declaration
 }
