@@ -4,17 +4,23 @@
  */
 package Agent;
 
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Dimension;
+
 import javax.swing.BoxLayout;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
+import Main.Home;
+import changePassword.changePassword;
 
 /**
  *
  * @author G
  */
 public class Dashboard extends javax.swing.JFrame {
-    
+
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Dashboard.class.getName());
 
     /**
@@ -22,9 +28,12 @@ public class Dashboard extends javax.swing.JFrame {
      */
     public Dashboard() {
         initComponents();
-        
-        
-                // Settings popup menu
+
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
+        this.setLocationRelativeTo(null);
+
+
+        // Settings popup menu
         JPopupMenu settingsMenu = new JPopupMenu();
         JMenuItem miChangePassword = new JMenuItem("Change Password");
         JMenuItem miDeleteProfile  = new JMenuItem("Delete Profile");
@@ -32,57 +41,85 @@ public class Dashboard extends javax.swing.JFrame {
         settingsMenu.add(miChangePassword);
         settingsMenu.add(miDeleteProfile);
 
+        settingbtn.setOpaque(true);
+        settingbtn.setContentAreaFilled(false);
+        settingbtn.setBorderPainted(false);
+
+        settingbtn.addMouseListener(new java.awt.event.MouseAdapter() {
+
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                settingbtn.setBackground(new Color(100, 100, 100));
+                settingbtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                settingbtn.setPreferredSize(new Dimension(42, 27));
+                settingbtn.revalidate(); // refresh layout
+
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                settingbtn.setBackground(new Color(70, 70, 70));
+                settingbtn.setPreferredSize(new Dimension(40, 30));
+                settingbtn.revalidate(); // refresh layout
+
+            }
+        });
+
         settingbtn.addActionListener(e -> {
             settingsMenu.show(
-                settingbtn,          // anchor
-                0,                    // x position
-                settingbtn.getHeight() // y position (below button)
+                    settingbtn,          // anchor
+                    0,                    // x position
+                    settingbtn.getHeight() // y position (below button)
             );
         });
-        
+        miChangePassword.addActionListener((java.awt.event.ActionEvent evt) -> {
+            new changePassword().setVisible(true);  // open page
+            // optionally close current window:
+            // SwingUtilities.getWindowAncestor(settingsMenu).dispose();
+        });
         miDeleteProfile.addActionListener(e -> {
-    int confirm = JOptionPane.showConfirmDialog(
-        this,
-        "Are you sure you want to delete your profile?",
-        "Confirm Delete",
-        JOptionPane.YES_NO_OPTION
-    );
+            int confirm = JOptionPane.showConfirmDialog(
+                    this,
+                    "Are you sure you want to delete your profile?",
+                    "Confirm Delete",
+                    JOptionPane.YES_NO_OPTION
+            );
 
-    if (confirm == JOptionPane.YES_OPTION) {
-        JOptionPane.showMessageDialog(
-            this,
-            "Profile deleted (frontend only)"
-        );
-    }
-});
+            if (confirm == JOptionPane.YES_OPTION) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Profile deleted (frontend only)"
+                );
+            }
+        });
 
 
-        
+
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
         // This part handles the alternating (zebra) colors
-AlertTable.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCellRenderer() {
-    @Override
-    public java.awt.Component getTableCellRendererComponent(javax.swing.JTable table, Object value, 
-            boolean isSelected, boolean hasFocus, int row, int column) {
-        
-        java.awt.Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-        
-        if (!isSelected) {
-            // If the row number is even, use a darker gray. If odd, use a slightly lighter gray.
-            if (row % 2 == 0) {
-                c.setBackground(new java.awt.Color(40, 40, 40)); // Darker row
-            } else {
-                c.setBackground(new java.awt.Color(55, 55, 55)); // Lighter row
+        AlertTable.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCellRenderer() {
+            @Override
+            public java.awt.Component getTableCellRendererComponent(javax.swing.JTable table, Object value,
+                                                                    boolean isSelected, boolean hasFocus, int row, int column) {
+
+                java.awt.Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+
+                if (!isSelected) {
+                    // If the row number is even, use a darker gray. If odd, use a slightly lighter gray.
+                    if (row % 2 == 0) {
+                        c.setBackground(new java.awt.Color(40, 40, 40)); // Darker row
+                    } else {
+                        c.setBackground(new java.awt.Color(55, 55, 55)); // Lighter row
+                    }
+                } else {
+                    // Color for when a row is clicked/selected
+                    c.setBackground(table.getSelectionBackground());
+                }
+
+                c.setForeground(java.awt.Color.WHITE); // Keep all text white
+                return c;
             }
-        } else {
-            // Color for when a row is clicked/selected
-            c.setBackground(table.getSelectionBackground());
-        }
-        
-        c.setForeground(java.awt.Color.WHITE); // Keep all text white
-        return c;
-    }
-});
+        });
 
 
 
@@ -99,7 +136,7 @@ AlertTable.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCe
      * regenerated by the Form Editor.
      */
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">
     private void initComponents() {
 
         jLabel1 = new javax.swing.JLabel();
@@ -107,8 +144,8 @@ AlertTable.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCe
         toprowpanel = new javax.swing.JPanel();
         headerRpanel = new javax.swing.JPanel();
         homebtn = new javax.swing.JButton();
+        dashbtn = new javax.swing.JButton();
         logoutbtn = new javax.swing.JButton();
-        aboutbtn = new javax.swing.JButton();
         filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(6, 0), new java.awt.Dimension(6, 0), new java.awt.Dimension(6, 32767));
         filler4 = new javax.swing.Box.Filler(new java.awt.Dimension(10, 0), new java.awt.Dimension(10, 0), new java.awt.Dimension(10, 32767));
         filler5 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
@@ -127,9 +164,10 @@ AlertTable.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCe
         alertsbtn = new javax.swing.JButton();
         injurybtn = new javax.swing.JButton();
         fencebtn = new javax.swing.JButton();
-        livedetectbtn = new javax.swing.JButton();
-        filler2 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 20), new java.awt.Dimension(0, 20), new java.awt.Dimension(32767, 20));
+        aibtn = new javax.swing.JButton();
+        filler2 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 20), new java.awt.Dimension(0, 400), new java.awt.Dimension(32767, 425));
         filler3 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 10), new java.awt.Dimension(0, 10), new java.awt.Dimension(32767, 10));
+        call = new javax.swing.JLabel();
         center = new javax.swing.JPanel();
         centerbig = new javax.swing.JPanel();
         sidebarR = new javax.swing.JPanel();
@@ -139,7 +177,6 @@ AlertTable.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCe
         injuredlabel = new javax.swing.JLabel();
         injuredNum = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
-        call = new javax.swing.JLabel();
         centerpanel = new javax.swing.JPanel();
         panelTable = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -178,6 +215,7 @@ AlertTable.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCe
         headerRpanel.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         headerRpanel.setPreferredSize(new java.awt.Dimension(300, 0));
 
+        homebtn.setFont(new java.awt.Font("Poppins", 1, 16)); // NOI18N
         homebtn.setForeground(new java.awt.Color(255, 255, 255));
         homebtn.setText("HOME");
         homebtn.setAlignmentX(1.0F);
@@ -186,8 +224,41 @@ AlertTable.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCe
         homebtn.setContentAreaFilled(false);
         homebtn.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         homebtn.setFocusPainted(false);
+        homebtn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                homebtnMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                homebtnMouseExited(evt);
+            }
+        });
         headerRpanel.add(homebtn);
 
+        dashbtn.setFont(new java.awt.Font("Poppins", 1, 16)); // NOI18N
+        dashbtn.setForeground(new java.awt.Color(255, 255, 255));
+        dashbtn.setText("DASHBOARD");
+        dashbtn.setAlignmentX(1.0F);
+        dashbtn.setBorder(javax.swing.BorderFactory.createEmptyBorder(30, 10, 1, 0));
+        dashbtn.setBorderPainted(false);
+        dashbtn.setContentAreaFilled(false);
+        dashbtn.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        dashbtn.setFocusPainted(false);
+        dashbtn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                dashbtnMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                dashbtnMouseExited(evt);
+            }
+        });
+        dashbtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                dashbtnActionPerformed(evt);
+            }
+        });
+        headerRpanel.add(dashbtn);
+
+        logoutbtn.setFont(new java.awt.Font("Poppins", 1, 16)); // NOI18N
         logoutbtn.setForeground(new java.awt.Color(255, 255, 255));
         logoutbtn.setText("LOG OUT");
         logoutbtn.setAlignmentX(1.0F);
@@ -196,21 +267,20 @@ AlertTable.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCe
         logoutbtn.setContentAreaFilled(false);
         logoutbtn.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         logoutbtn.setFocusPainted(false);
-        headerRpanel.add(logoutbtn);
-
-        aboutbtn.setForeground(new java.awt.Color(255, 255, 255));
-        aboutbtn.setText("ABOUT US");
-        aboutbtn.setAlignmentX(1.0F);
-        aboutbtn.setBorder(javax.swing.BorderFactory.createEmptyBorder(30, 10, 1, 0));
-        aboutbtn.setBorderPainted(false);
-        aboutbtn.setContentAreaFilled(false);
-        aboutbtn.setFocusPainted(false);
-        aboutbtn.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                aboutbtnActionPerformed(evt);
+        logoutbtn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                logoutbtnMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                logoutbtnMouseExited(evt);
             }
         });
-        headerRpanel.add(aboutbtn);
+        logoutbtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                logoutbtnActionPerformed(evt);
+            }
+        });
+        headerRpanel.add(logoutbtn);
         headerRpanel.add(filler1);
         headerRpanel.add(filler4);
         headerRpanel.add(filler5);
@@ -279,7 +349,16 @@ AlertTable.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCe
         settingbtn.setContentAreaFilled(false);
         settingbtn.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         settingbtn.setFocusPainted(false);
+        settingbtn.setOpaque(true);
         settingbtn.setPreferredSize(new java.awt.Dimension(40, 30));
+        settingbtn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                settingbtnMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                settingbtnMouseExited(evt);
+            }
+        });
         settingbtn.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 settingbtnActionPerformed(evt);
@@ -297,7 +376,7 @@ AlertTable.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCe
         sidebar.setPreferredSize(new java.awt.Dimension(200, 0));
         sidebar.setLayout(new javax.swing.BoxLayout(sidebar, javax.swing.BoxLayout.Y_AXIS));
 
-        alertsbtn.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        alertsbtn.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
         alertsbtn.setForeground(new java.awt.Color(255, 255, 255));
         alertsbtn.setText("Elephant  Alerts");
         alertsbtn.setBorder(javax.swing.BorderFactory.createEmptyBorder(20, 15, 10, 15));
@@ -306,9 +385,22 @@ AlertTable.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCe
         alertsbtn.setFocusPainted(false);
         alertsbtn.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         alertsbtn.setMaximumSize(new java.awt.Dimension(200, 40));
+        alertsbtn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                alertsbtnMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                alertsbtnMouseExited(evt);
+            }
+        });
+        alertsbtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                alertsbtnActionPerformed(evt);
+            }
+        });
         sidebar.add(alertsbtn);
 
-        injurybtn.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        injurybtn.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
         injurybtn.setForeground(new java.awt.Color(255, 255, 255));
         injurybtn.setText("Injured Elephants");
         injurybtn.setBorder(javax.swing.BorderFactory.createEmptyBorder(20, 15, 10, 15));
@@ -317,6 +409,14 @@ AlertTable.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCe
         injurybtn.setFocusPainted(false);
         injurybtn.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         injurybtn.setMaximumSize(new java.awt.Dimension(200, 40));
+        injurybtn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                injurybtnMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                injurybtnMouseExited(evt);
+            }
+        });
         injurybtn.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 injurybtnActionPerformed(evt);
@@ -324,29 +424,70 @@ AlertTable.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCe
         });
         sidebar.add(injurybtn);
 
-        fencebtn.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        fencebtn.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
         fencebtn.setForeground(new java.awt.Color(255, 255, 255));
-        fencebtn.setText("Electrical Fences");
+        fencebtn.setText("Electric Fences");
         fencebtn.setBorder(javax.swing.BorderFactory.createEmptyBorder(20, 15, 10, 15));
         fencebtn.setBorderPainted(false);
         fencebtn.setContentAreaFilled(false);
         fencebtn.setFocusPainted(false);
         fencebtn.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         fencebtn.setMaximumSize(new java.awt.Dimension(200, 40));
+        fencebtn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                fencebtnMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                fencebtnMouseExited(evt);
+            }
+        });
+        fencebtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                fencebtnActionPerformed(evt);
+            }
+        });
         sidebar.add(fencebtn);
 
-        livedetectbtn.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        livedetectbtn.setForeground(new java.awt.Color(255, 255, 255));
-        livedetectbtn.setText("Live Detection");
-        livedetectbtn.setBorder(javax.swing.BorderFactory.createEmptyBorder(20, 15, 10, 15));
-        livedetectbtn.setBorderPainted(false);
-        livedetectbtn.setContentAreaFilled(false);
-        livedetectbtn.setFocusPainted(false);
-        livedetectbtn.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-        livedetectbtn.setMaximumSize(new java.awt.Dimension(200, 40));
-        sidebar.add(livedetectbtn);
+        aibtn.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
+        aibtn.setForeground(new java.awt.Color(255, 255, 255));
+        aibtn.setText("Live Detection");
+        aibtn.setBorder(javax.swing.BorderFactory.createEmptyBorder(20, 15, 10, 15));
+        aibtn.setBorderPainted(false);
+        aibtn.setContentAreaFilled(false);
+        aibtn.setFocusPainted(false);
+        aibtn.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        aibtn.setMaximumSize(new java.awt.Dimension(200, 40));
+        aibtn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                aibtnMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                aibtnMouseExited(evt);
+            }
+        });
+        sidebar.add(aibtn);
         sidebar.add(filler2);
         sidebar.add(filler3);
+
+        call.setBackground(new java.awt.Color(40, 40, 40));
+        call.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        call.setForeground(new java.awt.Color(230, 130, 40));
+        call.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        call.setText("<html><span style='white-space: nowrap;'>📞 CALL WILDLIFE</span></html>");
+        call.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 10, 1, 50));
+        call.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        call.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                callMouseClicked(evt);
+            }
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                callMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                callMouseExited(evt);
+            }
+        });
+        sidebar.add(call);
 
         getContentPane().add(sidebar, java.awt.BorderLayout.LINE_START);
 
@@ -392,26 +533,6 @@ AlertTable.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCe
 
         sidebarR.add(quickstat);
 
-        call.setBackground(new java.awt.Color(40, 40, 40));
-        call.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        call.setForeground(new java.awt.Color(230, 130, 40));
-        call.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        call.setText("<html>📞 CALL WILDLIFE</html>");
-        call.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 10, 1, 50));
-        call.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        call.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                callMouseClicked(evt);
-            }
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                callMouseEntered(evt);
-            }
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                callMouseExited(evt);
-            }
-        });
-        sidebarR.add(call);
-
         centerbig.add(sidebarR, java.awt.BorderLayout.LINE_END);
 
         centerpanel.setBackground(new java.awt.Color(40, 40, 40));
@@ -430,15 +551,15 @@ AlertTable.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCe
         AlertTable.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         AlertTable.setForeground(new java.awt.Color(255, 255, 255));
         AlertTable.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null}
-            },
-            new String [] {
-                "Location", "Alert Type", "Status"
-            }
+                new Object [][] {
+                        {null, null, null},
+                        {null, null, null},
+                        {null, null, null},
+                        {null, null, null}
+                },
+                new String [] {
+                        "Location", "Alert Type", "Status"
+                }
         ));
         AlertTable.setGridColor(new java.awt.Color(55, 55, 55));
         AlertTable.setPreferredSize(new java.awt.Dimension(225, 150));
@@ -587,74 +708,164 @@ AlertTable.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCe
         getContentPane().add(center, java.awt.BorderLayout.CENTER);
 
         pack();
-    }// </editor-fold>//GEN-END:initComponents
+    }// </editor-fold>
 
-    private void injurybtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_injurybtnActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_injurybtnActionPerformed
+    private void dashbtnActionPerformed(java.awt.event.ActionEvent evt) {
 
-    private void aboutbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_aboutbtnActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_aboutbtnActionPerformed
+    }
 
-    private void callMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_callMouseClicked
-        javax.swing.JOptionPane.showMessageDialog(this, 
-        "<html><center><font size='5' color='orange'><b>Emergency Wildlife Services</b></font><br>" +
-        "<font size='4'>Contact Number: +94 11 234 5678</font><br>" +
-        "<i>Dispatching help to the last known alert location...</i></center></html>", 
-        "Emergency Call", 
-        javax.swing.JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_callMouseClicked
-
-    private void callMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_callMouseEntered
-        call.setForeground(java.awt.Color.WHITE);
-    }//GEN-LAST:event_callMouseEntered
-
-    private void callMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_callMouseExited
-       // This resets the color to Orange when the mouse leaves
-call.setForeground(new java.awt.Color(255, 153, 0));
-    }//GEN-LAST:event_callMouseExited
-
-    private void cardredMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cardredMouseEntered
+    private void cardredMouseEntered(java.awt.event.MouseEvent evt) {
         cardred.setBackground(new java.awt.Color(255, 20, 50));
-   
-    }//GEN-LAST:event_cardredMouseEntered
 
-    private void cardredMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cardredMouseExited
+    }
+
+    private void cardredMouseExited(java.awt.event.MouseEvent evt) {
         cardred.setBackground(new java.awt.Color(200, 60, 60));
-    }//GEN-LAST:event_cardredMouseExited
+    }
 
-    private void cardyellowMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cardyellowMouseEntered
+    private void cardyellowMouseEntered(java.awt.event.MouseEvent evt) {
         cardyellow.setBackground(new java.awt.Color(255, 204, 102));
-    }//GEN-LAST:event_cardyellowMouseEntered
+    }
 
-    private void cardyellowMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cardyellowMouseExited
+    private void cardyellowMouseExited(java.awt.event.MouseEvent evt) {
         cardyellow.setBackground(new java.awt.Color(220, 170, 60));
-    }//GEN-LAST:event_cardyellowMouseExited
+    }
 
-    private void cardorangeMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cardorangeMouseEntered
+    private void cardorangeMouseEntered(java.awt.event.MouseEvent evt) {
         cardorange.setBackground(new java.awt.Color(255, 153,51));
-    }//GEN-LAST:event_cardorangeMouseEntered
+    }
 
-    private void cardorangeMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cardorangeMouseExited
-         cardorange.setBackground(new java.awt.Color(230, 130,40));
-    }//GEN-LAST:event_cardorangeMouseExited
+    private void cardorangeMouseExited(java.awt.event.MouseEvent evt) {
+        cardorange.setBackground(new java.awt.Color(230, 130,40));
+    }
 
-    private void titlered2MouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_titlered2MouseEntered
-      
-    }//GEN-LAST:event_titlered2MouseEntered
+    private void titlered2MouseEntered(java.awt.event.MouseEvent evt) {
 
-    private void cardred2MouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cardred2MouseEntered
-       cardred2.setBackground(new java.awt.Color(204, 0, 51));
-    }//GEN-LAST:event_cardred2MouseEntered
+    }
 
-    private void cardred2MouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cardred2MouseExited
+    private void cardred2MouseEntered(java.awt.event.MouseEvent evt) {
+        cardred2.setBackground(new java.awt.Color(204, 0, 51));
+    }
+
+    private void cardred2MouseExited(java.awt.event.MouseEvent evt) {
         cardred2.setBackground(new java.awt.Color(200, 60, 60));
-    }//GEN-LAST:event_cardred2MouseExited
+    }
 
-    private void settingbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_settingbtnActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_settingbtnActionPerformed
+    private void settingbtnActionPerformed(java.awt.event.ActionEvent evt) {
+
+    }
+
+    private void callMouseExited(java.awt.event.MouseEvent evt) {
+        // This resets the color to Orange when the mouse leaves
+        call.setForeground(new java.awt.Color(255, 153, 0));
+    }
+
+    private void callMouseEntered(java.awt.event.MouseEvent evt) {
+        call.setForeground(java.awt.Color.WHITE);
+    }
+
+    private void callMouseClicked(java.awt.event.MouseEvent evt) {
+        javax.swing.JOptionPane.showMessageDialog(this,
+                "<html><center><font size='5' color='orange'><b>Emergency Wildlife Services</b></font><br>" +
+                        "<font size='4'>Contact Number: +94 11 234 5678</font><br>" +
+                        "<i>Dispatching help to the last known alert location...</i></center></html>",
+                "Emergency Call",
+                javax.swing.JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void alertsbtnMouseEntered(java.awt.event.MouseEvent evt) {
+        alertsbtn.setForeground(new java.awt.Color(255, 153, 0));
+
+    }
+
+    private void alertsbtnMouseExited(java.awt.event.MouseEvent evt) {
+        // This resets the color to Orange when the mouse leaves
+        alertsbtn.setForeground(java.awt.Color.WHITE);
+
+
+    }
+
+    private void injurybtnMouseEntered(java.awt.event.MouseEvent evt) {
+        injurybtn.setForeground(new java.awt.Color(255, 153, 0));
+
+    }
+
+    private void injurybtnMouseExited(java.awt.event.MouseEvent evt) {
+        injurybtn.setForeground(java.awt.Color.WHITE);
+    }
+
+    private void fencebtnMouseEntered(java.awt.event.MouseEvent evt) {
+        fencebtn.setForeground(new java.awt.Color(255, 153, 0));
+
+    }
+
+    private void fencebtnMouseExited(java.awt.event.MouseEvent evt) {
+        fencebtn.setForeground(java.awt.Color.WHITE);
+    }
+
+    private void aibtnMouseEntered(java.awt.event.MouseEvent evt) {
+        aibtn.setForeground(new java.awt.Color(255, 153, 0));
+    }
+
+    private void aibtnMouseExited(java.awt.event.MouseEvent evt) {
+        aibtn.setForeground(java.awt.Color.WHITE);
+    }
+
+    private void settingbtnMouseEntered(java.awt.event.MouseEvent evt) {
+
+
+    }
+
+
+    private void settingbtnMouseExited(java.awt.event.MouseEvent evt) {
+
+
+
+    }
+
+    private void homebtnMouseEntered(java.awt.event.MouseEvent evt) {
+        homebtn.setForeground(new java.awt.Color(255, 153, 0));
+    }
+
+    private void homebtnMouseExited(java.awt.event.MouseEvent evt) {
+        homebtn.setForeground(java.awt.Color.WHITE);
+    }
+
+    private void logoutbtnMouseEntered(java.awt.event.MouseEvent evt) {
+        logoutbtn.setForeground(new java.awt.Color(255, 153, 0));
+    }
+
+    private void logoutbtnMouseExited(java.awt.event.MouseEvent evt) {
+        logoutbtn.setForeground(java.awt.Color.WHITE);
+    }
+
+    private void dashbtnMouseEntered(java.awt.event.MouseEvent evt) {
+        dashbtn.setForeground(new java.awt.Color(255, 153, 0));
+    }
+
+    private void dashbtnMouseExited(java.awt.event.MouseEvent evt) {
+        dashbtn.setForeground(java.awt.Color.WHITE);
+    }
+
+    private void logoutbtnActionPerformed(java.awt.event.ActionEvent evt) {
+        new Home().setVisible(true);
+        this.dispose();
+    }
+
+    private void alertsbtnActionPerformed(java.awt.event.ActionEvent evt) {
+        new ReportElephantAgent().setVisible(true);
+        this.dispose();
+    }
+
+    private void injurybtnActionPerformed(java.awt.event.ActionEvent evt) {
+        new ReportInjured_Agent().setVisible(true);
+        this.dispose();
+    }
+
+    private void fencebtnActionPerformed(java.awt.event.ActionEvent evt) {
+        new UpdateFenceAgent().setVisible(true);
+        this.dispose();
+    }
 
     /**
      * @param args the command line arguments
@@ -663,7 +874,7 @@ call.setForeground(new java.awt.Color(255, 153, 0));
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
@@ -681,9 +892,9 @@ call.setForeground(new java.awt.Color(255, 153, 0));
         java.awt.EventQueue.invokeLater(() -> new Dashboard().setVisible(true));
     }
 
-    // Variables declaration - do not modify//GEN-BEGIN:variables
+    // Variables declaration - do not modify
     private javax.swing.JTable AlertTable;
-    private javax.swing.JButton aboutbtn;
+    private javax.swing.JButton aibtn;
     private javax.swing.JButton alertsbtn;
     private javax.swing.JLabel call;
     private javax.swing.JPanel cardorange;
@@ -694,6 +905,7 @@ call.setForeground(new java.awt.Color(255, 153, 0));
     private javax.swing.JPanel center;
     private javax.swing.JPanel centerbig;
     private javax.swing.JPanel centerpanel;
+    private javax.swing.JButton dashbtn;
     private javax.swing.JButton fencebtn;
     private javax.swing.Box.Filler filler1;
     private javax.swing.Box.Filler filler2;
@@ -718,7 +930,6 @@ call.setForeground(new java.awt.Color(255, 153, 0));
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JPanel legend;
-    private javax.swing.JButton livedetectbtn;
     private javax.swing.JPanel logopanel;
     private javax.swing.JButton logoutbtn;
     private javax.swing.JLabel namelabel;
@@ -739,5 +950,5 @@ call.setForeground(new java.awt.Color(255, 153, 0));
     private javax.swing.JLabel titleyellow;
     private javax.swing.JPanel toprowpanel;
     private javax.swing.JPanel welcomepanel;
-    // End of variables declaration//GEN-END:variables
+    // End of variables declaration
 }

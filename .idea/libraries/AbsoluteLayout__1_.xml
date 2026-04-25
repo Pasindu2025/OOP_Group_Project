@@ -5,6 +5,8 @@
       <root url="jar://$USER_HOME$/Downloads/commons-logging-1.3.6.jar!/" />
       <root url="jar://$USER_HOME$/Downloads/jxmapviewer2-2.8.1.jar!/" />
       <root url="jar://$USER_HOME$/Downloads/flatlaf-3.7.1.jar!/" />
+      <root url="jar://$USER_HOME$/Downloads/AbsoluteLayout-RELEASE290.jar!/" />
+      <root url="jar://$USER_HOME$/Downloads/jxmapviewer2-2.8.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
