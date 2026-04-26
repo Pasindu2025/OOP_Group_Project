@@ -6,8 +6,10 @@ import Main.Home;
 import org.jxmapviewer.JXMapViewer;
 import org.jxmapviewer.OSMTileFactoryInfo;
 import org.jxmapviewer.viewer.*;
+import org.jxmapviewer.painter.Painter;
 import org.netbeans.lib.awtextra.AbsoluteConstraints;
 import java.awt.*;
+import java.awt.geom.Point2D;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -71,10 +73,155 @@ public class ReportInjured_WL extends javax.swing.JFrame {
         mapViewer.addMouseWheelListener(new org.jxmapviewer.input.ZoomMouseWheelListenerCenter(mapViewer));
         mapViewer.addMouseMotionListener(new org.jxmapviewer.input.PanMouseInputListener(mapViewer));
 
+        // HOVER LOGIC: Show info on mouse move
+        mapViewer.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(java.awt.event.MouseEvent e) {
+                GeoPosition mousePos = mapViewer.convertPointToGeoPosition(e.getPoint());
+                boolean found = false;
+                for (Map.Entry<GeoPosition, String[]> entry : injuredElephants.entrySet()) {
+                    if (isNear(entry.getKey(), mousePos, 0.003)) {
+                        mapViewer.setToolTipText("<html><b>INCIDENT:</b> " + entry.getValue()[0] +
+                                "<br><b>SEVERITY:</b> " + entry.getValue()[1] + "</html>");
+                        found = true; break;
+                    }
+                }
+                if (!found) mapViewer.setToolTipText(null);
+            }
+        });
 
+        // CLICK LOGIC: Double-Click Add / Right-Click Remove
+        mapViewer.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                GeoPosition pos = mapViewer.convertPointToGeoPosition(e.getPoint());
+                removeReportAt(pos);
+            }
+
+        });
 
         jPanel1.add(mapViewer, new AbsoluteConstraints(50, 150, 1100, 600));
     }
+
+    private void removeReportAt(GeoPosition clickedPos) {
+        GeoPosition toRemove = null;
+
+        for (GeoPosition pos : injuredElephants.keySet()) {
+            if (isNear(pos, clickedPos, 0.005)) {
+                toRemove = pos;
+                break;
+            }
+        }
+
+        if (toRemove != null) {
+            if (JOptionPane.showConfirmDialog(this, "Delete this report?", "Remove", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+
+                injuredElephants.remove(toRemove);
+
+                // rebuild sidebar
+                alertFeed.setText("");
+                for (String[] data : injuredElephants.values()) {
+                    alertFeed.append("• [" + data[1] + "] " + data[0] + "\n");
+                }
+
+                updateStats();
+                refreshMapOverlay();
+                mapViewer.repaint();
+            }
+        }
+    }
+
+    private void loadInjuredData() {
+        try {
+            injuredElephants.clear();
+            alertFeed.setText("");
+            int crit = 0, gun = 0, limp = 0, dead = 0;
+
+            ResultSet rs = con.createStatement().executeQuery("SELECT * FROM injured_elephants");
+            while (rs.next()) {
+                GeoPosition pos = new GeoPosition(rs.getDouble("latitude"), rs.getDouble("longitude"));
+                String desc = rs.getString("description");
+                String sev = rs.getString("severity");
+                injuredElephants.put(pos, new String[]{desc, sev});
+
+                alertFeed.append("• [" + sev + "] " + desc + "\n");
+                if (sev.equals("Critical")) crit++;
+                else if (sev.equals("Gunshot Wound")) gun++;
+                else if (sev.equals("Limping")) limp++;
+                else if (sev.equals("Deceased")) dead++;
+            }
+
+            statsArea.setText("--- STATUS COUNTS ---\n🚨 Critical: " + crit + "\n🔫 Gunshot: " + gun +
+                    "\n🐘 Limping: " + limp + "\n💀 Deceased: " + dead + "\n---------------------");
+            refreshMapOverlay();
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    private void refreshMapOverlay() {
+        Painter<JXMapViewer> painter = (Graphics2D g, JXMapViewer map, int w, int h) -> {
+            g = (Graphics2D) g.create();
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            Rectangle rect = map.getViewportBounds();
+            for (Map.Entry<GeoPosition, String[]> entry : injuredElephants.entrySet()) {
+                Point2D pt = map.getTileFactory().geoToPixel(entry.getKey(), map.getZoom());
+                int x = (int) pt.getX() - rect.x;
+                int y = (int) pt.getY() - rect.y;
+
+                String sev = entry.getValue()[1];
+                if (sev.equals("Critical")) g.setColor(Color.YELLOW);
+                else if (sev.equals("Deceased")) g.setColor(Color.BLACK);
+                else if (sev.equals("Gunshot Wound")) g.setColor(Color.RED);
+                else if (sev.equals("Limping")) g.setColor(Color.ORANGE);
+                else if (sev.equals("Minor")) g.setColor(Color.GREEN);
+                else g.setColor(Color.YELLOW);
+
+                g.fillOval(x - 12, y - 12, 24, 24);
+                g.setColor(Color.WHITE);
+                g.drawOval(x - 12, y - 12, 24, 24);
+            }
+            g.dispose();
+        };
+        mapViewer.setOverlayPainter(painter);
+        mapViewer.repaint();
+    }
+
+    private boolean isNear(GeoPosition p1, GeoPosition p2, double tol) {
+        return Math.abs(p1.getLatitude() - p2.getLatitude()) < tol && Math.abs(p1.getLongitude() - p2.getLongitude()) < tol;
+    }
+
+    private String getNearestVillage(double lat, double lon) {
+        try {
+            PreparedStatement pst = con.prepareStatement("SELECT village FROM sl_locations ORDER BY (ABS(latitude - ?) + ABS(longitude - ?)) LIMIT 1");
+            pst.setDouble(1, lat); pst.setDouble(2, lon);
+            ResultSet rs = pst.executeQuery();
+            if (rs.next()) return rs.getString("village");
+        } catch (Exception e) { e.printStackTrace(); }
+        return "Unknown Location";
+    }
+
+    private void updateStats() {
+        int crit = 0, gun = 0, limp = 0, dead = 0;
+
+        for (String[] data : injuredElephants.values()) {
+            String sev = data[1];
+
+            if (sev.equals("Critical")) crit++;
+            else if (sev.equals("Gunshot Wound")) gun++;
+            else if (sev.equals("Limping")) limp++;
+            else if (sev.equals("Deceased")) dead++;
+        }
+
+        statsArea.setText(
+                "--- STATUS COUNTS ---\n" +
+                        "🚨 Critical: " + crit +
+                        "\n🔫 Gunshot: " + gun +
+                        "\n🐘 Limping: " + limp +
+                        "\n💀 Deceased: " + dead +
+                        "\n---------------------"
+        );
+    }
+
+
 
 
 

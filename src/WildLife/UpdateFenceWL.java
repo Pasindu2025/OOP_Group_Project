@@ -1,17 +1,18 @@
 package WildLife;
 
 import Main.AboutUs;
-import Main.Home;
 import org.jxmapviewer.JXMapViewer;
 import org.jxmapviewer.OSMTileFactoryInfo;
 import org.jxmapviewer.viewer.*;
+import org.jxmapviewer.painter.Painter;
 import org.netbeans.lib.awtextra.AbsoluteConstraints;
 import java.awt.*;
+import java.awt.geom.Point2D;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
 import javax.swing.*;
-import Main.MainDashboard;
+import Main.*;
 
 public class UpdateFenceWL extends javax.swing.JFrame {
 
@@ -66,9 +67,52 @@ public class UpdateFenceWL extends javax.swing.JFrame {
         mapViewer.addMouseWheelListener(new org.jxmapviewer.input.ZoomMouseWheelListenerCenter(mapViewer));
         mapViewer.addMouseMotionListener(new org.jxmapviewer.input.PanMouseInputListener(mapViewer));
 
+        // HOVER LOGIC: Show name when cursor is over a marker
+        // Inside initMapViewer, add this listener AFTER mapViewer = new JXMapViewer();
+        mapViewer.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(java.awt.event.MouseEvent e) {
+                GeoPosition mousePos = mapViewer.convertPointToGeoPosition(e.getPoint());
+                boolean found = false;
+
+                for (Map.Entry<GeoPosition, String[]> entry : activeFences.entrySet()) {
+                    double latDiff = Math.abs(entry.getKey().getLatitude() - mousePos.getLatitude());
+                    double lonDiff = Math.abs(entry.getKey().getLongitude() - mousePos.getLongitude());
+
+                    if (latDiff < 0.002 && lonDiff < 0.002) {
+                        // Shows the custom name you entered
+                        mapViewer.setToolTipText("Fence: " + entry.getValue()[0] + " (" + entry.getValue()[1] + ")");
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) mapViewer.setToolTipText(null);
+            }
+
+        });
+
+        mapViewer.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                Point2D pt = e.getPoint();
+                Rectangle rect = mapViewer.getViewportBounds();
+                Point2D actualPt = new Point2D.Double(pt.getX() + rect.getX(), pt.getY() + rect.getY());
+                GeoPosition clickedPos = mapViewer.getTileFactory().pixelToGeo(actualPt, mapViewer.getZoom());
+
+                if (SwingUtilities.isLeftMouseButton(e) && e.getClickCount() == 2) {
+                    addNewFence(clickedPos);
+                }
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    removeFenceAt(clickedPos);
+                }
+            }
+        });
+
         // 3. ADD TO PANEL LAST
         jPanel1.add(mapViewer, new AbsoluteConstraints(80, 180, 950, 580));
     }
+
+
 
     private Color getStatusColor(String status) {
         if (status == null) return new Color(0, 200, 50); // Default Green
@@ -79,6 +123,171 @@ public class UpdateFenceWL extends javax.swing.JFrame {
             case "DAMAGE": return Color.BLACK;
             case "OTHER": return Color.BLUE;
             default: return new Color(0, 200, 50); // Safe Green
+        }
+    }
+
+    private void addNewFence(GeoPosition pos) {
+        String village = getNearestVillage(pos.getLatitude(), pos.getLongitude());
+
+        // 1. Setup a custom panel for the dialog
+        JTextField customNameField = new JTextField(village); // Pre-filled with village name
+        String[] options = {"OK", "BROKEN", "ELECTRIC FAILURE", "DAMAGE", "OTHER"};
+        JComboBox<String> statusBox = new JComboBox<>(options);
+
+        Object[] message = {
+                "Detected Location:", new JLabel(village),
+                "Custom Fence Name:", customNameField,
+                "Current Status:", statusBox
+        };
+
+        int option = JOptionPane.showConfirmDialog(this, message, "Add New Fence", JOptionPane.OK_CANCEL_OPTION);
+
+        if (option == JOptionPane.OK_OPTION) {
+            String finalName = customNameField.getText().trim();
+            String status = (String) statusBox.getSelectedItem();
+
+            // 2. CHECK FOR DUPLICATE NAME (Check if this custom name already exists)
+            for (String[] data : activeFences.values()) {
+                if (data[0].equalsIgnoreCase(finalName)) {
+                    JOptionPane.showMessageDialog(this, "The name '" + finalName + "' is already in use.");
+                    return;
+                }
+            }
+
+            // 3. Save to DB and Refresh
+            if (!finalName.isEmpty()) {
+                activeFences.put(pos, new String[]{finalName, status});
+
+                alertFeed.append("📍 " + finalName + " -> STATUS: " + status + "\n");
+
+                refreshMapOverlay();
+                mapViewer.repaint();
+            }
+        }
+    }
+
+    private void refreshMapOverlay() {
+        Painter<JXMapViewer> fencePainter = (Graphics2D g, JXMapViewer map, int w, int h) -> {
+            g = (Graphics2D) g.create();
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            Rectangle rect = map.getViewportBounds();
+
+            for (Map.Entry<GeoPosition, String[]> entry : activeFences.entrySet()) {
+                Point2D pt = map.getTileFactory().geoToPixel(entry.getKey(), map.getZoom());
+                int x = (int) pt.getX() - rect.x;
+                int y = (int) pt.getY() - rect.y;
+
+                // Get the status string from the array (Index 1)
+                String statusValue = entry.getValue()[1];
+                Color color = getStatusColor(statusValue);
+
+                // Draw the Circle
+                g.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 160)); // 160 = Alpha/Transparency
+                g.fillOval(x - 12, y - 12, 24, 24);
+
+                g.setColor(Color.WHITE); // Inner ring for visibility
+                g.setStroke(new BasicStroke(1));
+                g.drawOval(x - 8, y - 8, 16, 16);
+
+                g.setColor(color); // Outer solid border
+                g.setStroke(new BasicStroke(3));
+                g.drawOval(x - 12, y - 12, 24, 24);
+            }
+            g.dispose();
+        };
+        mapViewer.setOverlayPainter(fencePainter);
+    }
+
+    private void searchFence(String query) {
+        if (query.isEmpty()) return;
+        boolean found = false;
+        for (Map.Entry<GeoPosition, String[]> entry : activeFences.entrySet()) {
+            if (entry.getValue()[0].toLowerCase().contains(query.toLowerCase())) {
+                mapViewer.setAddressLocation(entry.getKey());
+                mapViewer.setZoom(5);
+                JOptionPane.showMessageDialog(this, "FOUND: " + entry.getValue()[0] + "\nStatus: " + entry.getValue()[1]);
+                found = true;
+                break;
+            }
+        }
+        if (!found) JOptionPane.showMessageDialog(this, "Village not found in active fences.");
+    }
+
+    private String getNearestVillage(double lat, double lon) {
+        String village = "Unknown";
+        try {
+            PreparedStatement pst = con.prepareStatement("SELECT village FROM sl_locations " +
+                    "ORDER BY (ABS(latitude - ?) + ABS(longitude - ?)) LIMIT 1");
+            pst.setDouble(1, lat);
+            pst.setDouble(2, lon);
+            ResultSet rs = pst.executeQuery();
+            if (rs.next()) village = rs.getString("village");
+        } catch (Exception e) { e.printStackTrace(); }
+        return village;
+    }
+
+    private void loadExistingAlerts() {
+        try {
+            activeFences.clear();
+            alertFeed.setText(""); // This "removes" deleted items from the side panel automatically
+
+            ResultSet rs = con.createStatement().executeQuery("SELECT * FROM fences");
+            while (rs.next()) {
+                GeoPosition pos = new GeoPosition(rs.getDouble("latitude"), rs.getDouble("longitude"));
+                String name = rs.getString("place_name");
+                String status = rs.getString("status");
+
+                activeFences.put(pos, new String[]{name, status});
+
+                // Re-build the sidebar text
+                alertFeed.append("📍 " + name + " -> STATUS: " + status + "\n");
+            }
+            refreshMapOverlay();
+            mapViewer.repaint();
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    private void removeFenceAt(GeoPosition clickedPos) {
+        GeoPosition toRemove = null;
+        for (GeoPosition pos : activeFences.keySet()) {
+            if (Math.abs(pos.getLatitude() - clickedPos.getLatitude()) < 0.005 &&
+                    Math.abs(pos.getLongitude() - clickedPos.getLongitude()) < 0.005) {
+                toRemove = pos;
+                break;
+            }
+        }
+
+        if (toRemove != null) {
+            if (JOptionPane.showConfirmDialog(this, "Remove fence?", "Delete", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+                try {
+                    activeFences.remove(toRemove);
+
+                    alertFeed.setText("");
+                    for (String[] data : activeFences.values()) {
+                        alertFeed.append("📍 " + data[0] + " -> STATUS: " + data[1] + "\n");
+                    }
+
+                    refreshMapOverlay();
+                    mapViewer.repaint();
+                } catch (Exception ex) { ex.printStackTrace(); }
+            }
+        }
+    }
+
+    private void btnClearAllActionPerformed(java.awt.event.ActionEvent evt) {
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "DANGER: This will delete ALL fences from the map and database. Proceed?",
+                "Clear All Data", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                con.createStatement().executeUpdate("TRUNCATE TABLE active_alerts");
+                activeFences.clear();
+                loadExistingAlerts();
+                mapViewer.repaint();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
