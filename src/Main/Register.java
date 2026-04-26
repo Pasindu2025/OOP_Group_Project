@@ -268,7 +268,55 @@ public class Register extends javax.swing.JFrame {
     }
 
     private void registerbtnActionPerformed(java.awt.event.ActionEvent evt) {
+        try {
+            // 1. TextField wala data gannawa
+            String fullName = fnamefeild.getText();
+            String initials = namefeild.getText(); // Meka User model eke thiyenna ona
+            String email = emailfeild.getText();
+            String username = unamefeild.getText();
+            String password = new String(pwordfeild.getPassword());
 
+            if (fullName.isEmpty() || username.isEmpty() || password.isEmpty()) {
+                javax.swing.JOptionPane.showMessageDialog(this, "Please fill all required fields!");
+                return;
+            }
+
+            // 2. JSON data hadagannawa
+            String json = String.format(
+                    "{\"fullName\":\"%s\", \"initials\":\"%s\", \"email\":\"%s\", \"username\":\"%s\", \"password\":\"%s\"}",
+                    fullName, initials, email, username, password
+            );
+
+            // 3. Request eka hadanawa
+            java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
+            java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
+                    .uri(java.net.URI.create("http://localhost:8081/api/users/register")) // Port eka 8081 check karanna
+                    .header("Content-Type", "application/json")
+                    .POST(java.net.http.HttpRequest.BodyPublishers.ofString(json))
+                    .build();
+
+            // 4. Request eka yawala response eka check karanawa
+            client.sendAsync(request, java.net.http.HttpResponse.BodyHandlers.ofString())
+                    .thenAccept(response -> {
+                        int statusCode = response.statusCode();
+
+                        // Response eka success nam (200 OK hari 201 Created)
+                        if (statusCode == 200 || statusCode == 201) {
+                            javax.swing.JOptionPane.showMessageDialog(this, "Registered Successfully!");
+                            clear(); // Oyage clear function eka
+                        } else {
+                            // Backend eken ena error message eka pennanawa
+                            javax.swing.JOptionPane.showMessageDialog(this, "Registration Failed! Error: " + statusCode);
+                        }
+                    })
+                    .exceptionally(ex -> {
+                        javax.swing.JOptionPane.showMessageDialog(this, "Backend not connected! Please run Spring Boot.");
+                        return null;
+                    });
+
+        } catch (Exception e) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+        }
     }
 
     private void home_btnActionPerformed(java.awt.event.ActionEvent evt) {

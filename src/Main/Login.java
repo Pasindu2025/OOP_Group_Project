@@ -216,7 +216,54 @@ public class Login extends javax.swing.JFrame {
     }// </editor-fold>
 
     private void loginbtnActionPerformed(java.awt.event.ActionEvent evt) {
-        // TODO add your handling code here:
+        try {
+            // 1. TextFields wala thiyana data tika gannawa
+            String uName = usernamefeild.getText();
+            String pWord = new String(pwordfeild.getPassword());
+
+            // Simple validation - Fields empty da balanna
+            if (uName.isEmpty() || pWord.isEmpty()) {
+                javax.swing.JOptionPane.showMessageDialog(this, "Please enter both Username and Password!");
+                return;
+            }
+
+            // 2. JSON format ekata data hadagannawa (Backend ekata yawanna)
+            String json = String.format("{\"username\":\"%s\", \"password\":\"%s\"}", uName, pWord);
+
+            // 3. HttpClient use karala Backend ekata request eka yawanna
+            java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
+            java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
+                    .uri(java.net.URI.create("http://localhost:8081/api/users/login")) // Port 8081 check karanna
+                    .header("Content-Type", "application/json")
+                    .POST(java.net.http.HttpRequest.BodyPublishers.ofString(json))
+                    .build();
+
+            // 4. Response eka check karala login wenna
+            client.sendAsync(request, java.net.http.HttpResponse.BodyHandlers.ofString())
+                    .thenApply(java.net.http.HttpResponse::body)
+                    .thenAccept(response -> {
+                        if (response.equals("Success")) {
+                            java.awt.EventQueue.invokeLater(() -> {
+
+                                User.Main userMain = new User.Main();
+                                userMain.setVisible(true);
+
+                                // Login frame eka close karanawa
+                                this.dispose();
+                            });
+                        } else {
+                            javax.swing.JOptionPane.showMessageDialog(this, "Invalid Username or Password!");
+                        }
+                    })
+                    .exceptionally(ex -> {
+                        java.awt.EventQueue.invokeLater(() ->
+                                javax.swing.JOptionPane.showMessageDialog(this, "Backend connection failed! Check if Spring Boot is running."));
+                        return null;
+                    });
+
+        } catch (Exception e) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+        }
     }
 
     private void home_btnActionPerformed(java.awt.event.ActionEvent evt) {
