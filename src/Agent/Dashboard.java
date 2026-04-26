@@ -127,7 +127,23 @@ public class Dashboard extends javax.swing.JFrame {
 // Set the Table Header color to match the dashboard
 //AlertTable.getTableHeader().setBackground(new java.awt.Color(40, 40, 40));
 //AlertTable.getTableHeader().setForeground(new java.awt.Color(40,40,40));
+        aibtn.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                try {
+                    // Python full path eka or 'python'
+                    String pythonPath = "python";
+                    String scriptPath = "C:\\Users\\Lenovo\\Desktop\\Elephant_Project\\app.py";
 
+                    ProcessBuilder pb = new ProcessBuilder(pythonPath, scriptPath);
+                    pb.start();
+                    System.out.println("AI Cam Started!");
+
+                } catch (Exception ex) {
+                    javax.swing.JOptionPane.showMessageDialog(null, "AI Cam Error: " + ex.getMessage());
+                }
+            }
+        });
     }
 
     /**
