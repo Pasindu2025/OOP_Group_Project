@@ -100,12 +100,15 @@ public class Main extends javax.swing.JFrame {
         jLabel13 = new javax.swing.JLabel();
         headerRpanel = new javax.swing.JPanel();
         homebtn = new javax.swing.JButton();
+        filler7 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
+        filler8 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
         dashbtn = new javax.swing.JButton();
-        logoutbtn = new javax.swing.JButton();
-        filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(6, 0), new java.awt.Dimension(6, 0), new java.awt.Dimension(6, 32767));
-        filler4 = new javax.swing.Box.Filler(new java.awt.Dimension(10, 0), new java.awt.Dimension(10, 0), new java.awt.Dimension(10, 32767));
+        filler9 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
         filler5 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
-        filler6 = new javax.swing.Box.Filler(new java.awt.Dimension(20, 0), new java.awt.Dimension(20, 0), new java.awt.Dimension(20, 32767));
+        logoutbtn = new javax.swing.JButton();
+        filler10 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
+        filler11 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
+        filler6 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
         rootPanel = new javax.swing.JPanel();
         bodyPanel = new javax.swing.JPanel();
         welcomePanel = new javax.swing.JPanel();
@@ -194,7 +197,14 @@ public class Main extends javax.swing.JFrame {
                 homebtnMouseExited(evt);
             }
         });
+        homebtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                homebtnActionPerformed(evt);
+            }
+        });
         headerRpanel.add(homebtn);
+        headerRpanel.add(filler7);
+        headerRpanel.add(filler8);
 
         dashbtn.setFont(new java.awt.Font("Poppins", 1, 16)); // NOI18N
         dashbtn.setForeground(new java.awt.Color(255, 255, 255));
@@ -219,6 +229,8 @@ public class Main extends javax.swing.JFrame {
             }
         });
         headerRpanel.add(dashbtn);
+        headerRpanel.add(filler9);
+        headerRpanel.add(filler5);
 
         logoutbtn.setFont(new java.awt.Font("Poppins", 1, 16)); // NOI18N
         logoutbtn.setForeground(new java.awt.Color(255, 255, 255));
@@ -243,9 +255,8 @@ public class Main extends javax.swing.JFrame {
             }
         });
         headerRpanel.add(logoutbtn);
-        headerRpanel.add(filler1);
-        headerRpanel.add(filler4);
-        headerRpanel.add(filler5);
+        headerRpanel.add(filler10);
+        headerRpanel.add(filler11);
         headerRpanel.add(filler6);
 
         HeaderPanel.add(headerRpanel, java.awt.BorderLayout.EAST);
@@ -680,6 +691,10 @@ public class Main extends javax.swing.JFrame {
         this.dispose();
     }
 
+    private void homebtnActionPerformed(java.awt.event.ActionEvent evt) {
+        // TODO add your handling code here:
+    }
+
 
     /**
      * @param args the command line arguments
@@ -729,10 +744,13 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JPanel cardcontentpanel4;
     private javax.swing.JButton dashbtn;
     private javax.swing.JPanel featurePanel;
-    private javax.swing.Box.Filler filler1;
-    private javax.swing.Box.Filler filler4;
+    private javax.swing.Box.Filler filler10;
+    private javax.swing.Box.Filler filler11;
     private javax.swing.Box.Filler filler5;
     private javax.swing.Box.Filler filler6;
+    private javax.swing.Box.Filler filler7;
+    private javax.swing.Box.Filler filler8;
+    private javax.swing.Box.Filler filler9;
     private javax.swing.JPanel headerRpanel;
     private javax.swing.JButton homebtn;
     private javax.swing.JLabel image1;

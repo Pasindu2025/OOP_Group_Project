@@ -127,23 +127,7 @@ public class Dashboard extends javax.swing.JFrame {
 // Set the Table Header color to match the dashboard
 //AlertTable.getTableHeader().setBackground(new java.awt.Color(40, 40, 40));
 //AlertTable.getTableHeader().setForeground(new java.awt.Color(40,40,40));
-        aibtn.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent e) {
-                try {
-                    // Python full path eka or 'python'
-                    String pythonPath = "python";
-                    String scriptPath = "C:\\Users\\Lenovo\\Desktop\\Elephant_Project\\app.py";
 
-                    ProcessBuilder pb = new ProcessBuilder(pythonPath, scriptPath);
-                    pb.start();
-                    System.out.println("AI Cam Started!");
-
-                } catch (Exception ex) {
-                    javax.swing.JOptionPane.showMessageDialog(null, "AI Cam Error: " + ex.getMessage());
-                }
-            }
-        });
     }
 
     /**
@@ -158,14 +142,17 @@ public class Dashboard extends javax.swing.JFrame {
         jLabel1 = new javax.swing.JLabel();
         header = new javax.swing.JPanel();
         toprowpanel = new javax.swing.JPanel();
-        headerRpanel = new javax.swing.JPanel();
+        headerRpanel1 = new javax.swing.JPanel();
         homebtn = new javax.swing.JButton();
+        filler7 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
+        filler8 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
         dashbtn = new javax.swing.JButton();
+        filler9 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
+        filler10 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
         logoutbtn = new javax.swing.JButton();
-        filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(6, 0), new java.awt.Dimension(6, 0), new java.awt.Dimension(6, 32767));
-        filler4 = new javax.swing.Box.Filler(new java.awt.Dimension(10, 0), new java.awt.Dimension(10, 0), new java.awt.Dimension(10, 32767));
-        filler5 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
-        filler6 = new javax.swing.Box.Filler(new java.awt.Dimension(20, 0), new java.awt.Dimension(20, 0), new java.awt.Dimension(20, 32767));
+        filler11 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
+        filler12 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
+        filler13 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
         logopanel = new javax.swing.JPanel();
         jLabel6 = new javax.swing.JLabel();
         titlepanel = new javax.swing.JPanel();
@@ -225,11 +212,11 @@ public class Dashboard extends javax.swing.JFrame {
         toprowpanel.setPreferredSize(new java.awt.Dimension(0, 100));
         toprowpanel.setLayout(new java.awt.BorderLayout());
 
-        headerRpanel.setBackground(new java.awt.Color(0, 0, 0));
-        headerRpanel.setAlignmentX(20.0F);
-        headerRpanel.setAlignmentY(15.0F);
-        headerRpanel.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
-        headerRpanel.setPreferredSize(new java.awt.Dimension(300, 0));
+        headerRpanel1.setBackground(new java.awt.Color(0, 0, 0));
+        headerRpanel1.setAlignmentX(20.0F);
+        headerRpanel1.setAlignmentY(15.0F);
+        headerRpanel1.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        headerRpanel1.setPreferredSize(new java.awt.Dimension(300, 0));
 
         homebtn.setFont(new java.awt.Font("Poppins", 1, 16)); // NOI18N
         homebtn.setForeground(new java.awt.Color(255, 255, 255));
@@ -248,7 +235,14 @@ public class Dashboard extends javax.swing.JFrame {
                 homebtnMouseExited(evt);
             }
         });
-        headerRpanel.add(homebtn);
+        homebtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                homebtnActionPerformed(evt);
+            }
+        });
+        headerRpanel1.add(homebtn);
+        headerRpanel1.add(filler7);
+        headerRpanel1.add(filler8);
 
         dashbtn.setFont(new java.awt.Font("Poppins", 1, 16)); // NOI18N
         dashbtn.setForeground(new java.awt.Color(255, 255, 255));
@@ -272,7 +266,9 @@ public class Dashboard extends javax.swing.JFrame {
                 dashbtnActionPerformed(evt);
             }
         });
-        headerRpanel.add(dashbtn);
+        headerRpanel1.add(dashbtn);
+        headerRpanel1.add(filler9);
+        headerRpanel1.add(filler10);
 
         logoutbtn.setFont(new java.awt.Font("Poppins", 1, 16)); // NOI18N
         logoutbtn.setForeground(new java.awt.Color(255, 255, 255));
@@ -296,13 +292,12 @@ public class Dashboard extends javax.swing.JFrame {
                 logoutbtnActionPerformed(evt);
             }
         });
-        headerRpanel.add(logoutbtn);
-        headerRpanel.add(filler1);
-        headerRpanel.add(filler4);
-        headerRpanel.add(filler5);
-        headerRpanel.add(filler6);
+        headerRpanel1.add(logoutbtn);
+        headerRpanel1.add(filler11);
+        headerRpanel1.add(filler12);
+        headerRpanel1.add(filler13);
 
-        toprowpanel.add(headerRpanel, java.awt.BorderLayout.EAST);
+        toprowpanel.add(headerRpanel1, java.awt.BorderLayout.EAST);
 
         logopanel.setBackground(new java.awt.Color(0, 0, 0));
         logopanel.setPreferredSize(new java.awt.Dimension(100, 0));
@@ -576,7 +571,15 @@ public class Dashboard extends javax.swing.JFrame {
                 new String [] {
                         "Location", "Alert Type", "Status"
                 }
-        ));
+        ) {
+            boolean[] canEdit = new boolean [] {
+                    false, false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
         AlertTable.setGridColor(new java.awt.Color(55, 55, 55));
         AlertTable.setPreferredSize(new java.awt.Dimension(225, 150));
         AlertTable.setRowHeight(35);
@@ -726,10 +729,6 @@ public class Dashboard extends javax.swing.JFrame {
         pack();
     }// </editor-fold>
 
-    private void dashbtnActionPerformed(java.awt.event.ActionEvent evt) {
-
-    }
-
     private void cardredMouseEntered(java.awt.event.MouseEvent evt) {
         cardred.setBackground(new java.awt.Color(255, 20, 50));
 
@@ -839,35 +838,6 @@ public class Dashboard extends javax.swing.JFrame {
 
     }
 
-    private void homebtnMouseEntered(java.awt.event.MouseEvent evt) {
-        homebtn.setForeground(new java.awt.Color(255, 153, 0));
-    }
-
-    private void homebtnMouseExited(java.awt.event.MouseEvent evt) {
-        homebtn.setForeground(java.awt.Color.WHITE);
-    }
-
-    private void logoutbtnMouseEntered(java.awt.event.MouseEvent evt) {
-        logoutbtn.setForeground(new java.awt.Color(255, 153, 0));
-    }
-
-    private void logoutbtnMouseExited(java.awt.event.MouseEvent evt) {
-        logoutbtn.setForeground(java.awt.Color.WHITE);
-    }
-
-    private void dashbtnMouseEntered(java.awt.event.MouseEvent evt) {
-        dashbtn.setForeground(new java.awt.Color(255, 153, 0));
-    }
-
-    private void dashbtnMouseExited(java.awt.event.MouseEvent evt) {
-        dashbtn.setForeground(java.awt.Color.WHITE);
-    }
-
-    private void logoutbtnActionPerformed(java.awt.event.ActionEvent evt) {
-        new Home().setVisible(true);
-        this.dispose();
-    }
-
     private void alertsbtnActionPerformed(java.awt.event.ActionEvent evt) {
         new ReportElephantAgent().setVisible(true);
         this.dispose();
@@ -880,6 +850,43 @@ public class Dashboard extends javax.swing.JFrame {
 
     private void fencebtnActionPerformed(java.awt.event.ActionEvent evt) {
         new UpdateFenceAgent().setVisible(true);
+        this.dispose();
+    }
+
+    private void homebtnMouseEntered(java.awt.event.MouseEvent evt) {
+        homebtn.setForeground(new java.awt.Color(255, 153, 0));
+    }
+
+    private void homebtnMouseExited(java.awt.event.MouseEvent evt) {
+        homebtn.setForeground(java.awt.Color.WHITE);
+    }
+
+    private void homebtnActionPerformed(java.awt.event.ActionEvent evt) {
+        // TODO add your handling code here:
+    }
+
+    private void dashbtnMouseEntered(java.awt.event.MouseEvent evt) {
+        dashbtn.setForeground(new java.awt.Color(255, 153, 0));
+    }
+
+    private void dashbtnMouseExited(java.awt.event.MouseEvent evt) {
+        dashbtn.setForeground(java.awt.Color.WHITE);
+    }
+
+    private void dashbtnActionPerformed(java.awt.event.ActionEvent evt) {
+        // TODO add your handling code here:
+    }
+
+    private void logoutbtnMouseEntered(java.awt.event.MouseEvent evt) {
+        logoutbtn.setForeground(new java.awt.Color(255, 153, 0));
+    }
+
+    private void logoutbtnMouseExited(java.awt.event.MouseEvent evt) {
+        logoutbtn.setForeground(java.awt.Color.WHITE);
+    }
+
+    private void logoutbtnActionPerformed(java.awt.event.ActionEvent evt) {
+        new Home().setVisible(true);
         this.dispose();
     }
 
@@ -923,15 +930,18 @@ public class Dashboard extends javax.swing.JFrame {
     private javax.swing.JPanel centerpanel;
     private javax.swing.JButton dashbtn;
     private javax.swing.JButton fencebtn;
-    private javax.swing.Box.Filler filler1;
+    private javax.swing.Box.Filler filler10;
+    private javax.swing.Box.Filler filler11;
+    private javax.swing.Box.Filler filler12;
+    private javax.swing.Box.Filler filler13;
     private javax.swing.Box.Filler filler2;
     private javax.swing.Box.Filler filler3;
-    private javax.swing.Box.Filler filler4;
-    private javax.swing.Box.Filler filler5;
-    private javax.swing.Box.Filler filler6;
+    private javax.swing.Box.Filler filler7;
+    private javax.swing.Box.Filler filler8;
+    private javax.swing.Box.Filler filler9;
     private javax.swing.JLabel greetinglabel;
     private javax.swing.JPanel header;
-    private javax.swing.JPanel headerRpanel;
+    private javax.swing.JPanel headerRpanel1;
     private javax.swing.JButton homebtn;
     private javax.swing.JLabel injuredNum;
     private javax.swing.JLabel injuredlabel;
