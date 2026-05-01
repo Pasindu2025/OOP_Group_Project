@@ -1,8 +1,9 @@
 package Main;
 
-import addAgent.*;
 import WildLife.*;
-
+import WildLife.ReportElephantWL;
+import WildLife.ReportInjured_WL;
+import WildLife.UpdateFenceWL;
 
 
 public class MainDashboard extends javax.swing.JFrame {
@@ -52,6 +53,7 @@ public class MainDashboard extends javax.swing.JFrame {
         InjuryReportBtn = new javax.swing.JButton();
         FenceReportBtn = new javax.swing.JButton();
         FenceReportBtn1 = new javax.swing.JButton();
+        FenceReportBtn2 = new javax.swing.JButton();
 
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
         jPanel5.setLayout(jPanel5Layout);
@@ -206,7 +208,15 @@ public class MainDashboard extends javax.swing.JFrame {
                 new String [] {
                         "Alert Type", "Location", "Status"
                 }
-        ));
+        ) {
+            boolean[] canEdit = new boolean [] {
+                    false, false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
         jScrollPane2.setViewportView(Table1);
 
         jLabel4.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/thai-jp2.jpg"))); // NOI18N
@@ -255,10 +265,18 @@ public class MainDashboard extends javax.swing.JFrame {
         FenceReportBtn1.setBackground(new java.awt.Color(130, 211, 181));
         FenceReportBtn1.setFont(new java.awt.Font("Poppins", 1, 14)); // NOI18N
         FenceReportBtn1.setText("Electric Fences");
-        FenceReportBtn1.setActionCommand("Electric Fences");
         FenceReportBtn1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 FenceReportBtn1ActionPerformed(evt);
+            }
+        });
+
+        FenceReportBtn2.setBackground(new java.awt.Color(130, 211, 181));
+        FenceReportBtn2.setFont(new java.awt.Font("Poppins", 1, 14)); // NOI18N
+        FenceReportBtn2.setText("View Agent");
+        FenceReportBtn2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                FenceReportBtn2ActionPerformed(evt);
             }
         });
 
@@ -273,7 +291,8 @@ public class MainDashboard extends javax.swing.JFrame {
                                         .addComponent(InjuryReportBtn, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                         .addComponent(elephantReportBtn, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                         .addComponent(dashboardBtn, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                        .addComponent(FenceReportBtn1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                        .addComponent(FenceReportBtn1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addComponent(FenceReportBtn2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                                 .addContainerGap())
         );
         sideBarLayout.setVerticalGroup(
@@ -287,9 +306,11 @@ public class MainDashboard extends javax.swing.JFrame {
                                 .addComponent(InjuryReportBtn)
                                 .addGap(12, 12, 12)
                                 .addComponent(FenceReportBtn1)
-                                .addGap(18, 18, 18)
+                                .addGap(12, 12, 12)
                                 .addComponent(FenceReportBtn)
-                                .addContainerGap(508, Short.MAX_VALUE))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(FenceReportBtn2)
+                                .addContainerGap(473, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
@@ -398,6 +419,12 @@ public class MainDashboard extends javax.swing.JFrame {
         regBtn.setForeground(java.awt.Color.WHITE);
     }
 
+    private void logoutBtnActionPerformed(java.awt.event.ActionEvent evt) {
+        Home home = new Home();
+        home.setVisible(true);
+        this.dispose();
+    }
+
     private void logoutBtnMouseEntered(java.awt.event.MouseEvent evt) {
         logoutBtn.setForeground(new java.awt.Color(255,153,0));
     }
@@ -405,11 +432,7 @@ public class MainDashboard extends javax.swing.JFrame {
     private void logoutBtnMouseExited(java.awt.event.MouseEvent evt) {
         logoutBtn.setForeground(java.awt.Color.WHITE);
     }
-    private void logoutBtnActionPerformed(java.awt.event.ActionEvent evt) {
-        Home home = new Home();
-        home.setVisible(true);
-        this.dispose();
-    }
+
     private void InjuryReportBtnActionPerformed(java.awt.event.ActionEvent evt) {
         ReportInjured_WL RI = new ReportInjured_WL();
         RI.setVisible(true);
@@ -422,6 +445,11 @@ public class MainDashboard extends javax.swing.JFrame {
         this.dispose();
     }
 
+    private void FenceReportBtn2ActionPerformed(java.awt.event.ActionEvent evt) {
+        AgentDirectory agentDirectory = new AgentDirectory();
+        agentDirectory.setVisible(true);
+        this.dispose();
+    }
 
     /**
      * @param args the command line arguments
@@ -451,6 +479,7 @@ public class MainDashboard extends javax.swing.JFrame {
     // Variables declaration - do not modify
     private javax.swing.JButton FenceReportBtn;
     private javax.swing.JButton FenceReportBtn1;
+    private javax.swing.JButton FenceReportBtn2;
     private javax.swing.JButton InjuryReportBtn;
     private javax.swing.JTable Table1;
     private javax.swing.JButton dashboardBtn;

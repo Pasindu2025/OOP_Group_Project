@@ -6,6 +6,8 @@ package changePassword;
 
 
 import Main.*;
+import Main.Register;
+import Main.AboutUs;
 
 /**
  *
@@ -209,6 +211,11 @@ public class changePassword extends javax.swing.JFrame {
 
         newPword.setFont(new java.awt.Font("Segoe UI", 0, 16)); // NOI18N
         newPword.setText("jPasswordField2");
+        newPword.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                newPwordActionPerformed(evt);
+            }
+        });
 
         submitBtn.setBackground(new java.awt.Color(204, 255, 204));
         submitBtn.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
@@ -217,6 +224,11 @@ public class changePassword extends javax.swing.JFrame {
         restBtn.setBackground(new java.awt.Color(204, 255, 204));
         restBtn.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
         restBtn.setText("Reset");
+        restBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                restBtnActionPerformed(evt);
+            }
+        });
 
         jLabel5.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
         jLabel5.setText("User name");
@@ -265,7 +277,7 @@ public class changePassword extends javax.swing.JFrame {
                                                 .addComponent(submitBtn)
                                                 .addGap(78, 78, 78)
                                                 .addComponent(restBtn)))
-                                .addContainerGap(239, Short.MAX_VALUE))
+                                .addContainerGap(345, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
                 jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -305,7 +317,9 @@ public class changePassword extends javax.swing.JFrame {
         layout.setHorizontalGroup(
                 layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(layout.createSequentialGroup()
+                                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(0, 0, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
                 layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -373,6 +387,16 @@ public class changePassword extends javax.swing.JFrame {
         AboutUs aboutus = new AboutUs();
         aboutus.setVisible(true);
         this.dispose();
+    }
+
+    private void restBtnActionPerformed(java.awt.event.ActionEvent evt) {
+        usertName1.setText("");
+        currentPword.setText("");
+        newPword.setText("");
+        confPword.setText("");    }
+
+    private void newPwordActionPerformed(java.awt.event.ActionEvent evt) {
+        // TODO add your handling code here:
     }
 
     /**
