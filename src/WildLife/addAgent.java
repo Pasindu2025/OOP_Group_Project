@@ -6,6 +6,8 @@ package WildLife;
 
 import Main.*;
 
+import java.awt.event.ActionEvent;
+
 /**
  *
  * @author dedun_wkwxx6m
@@ -206,6 +208,13 @@ public class addAgent extends javax.swing.JFrame {
         jButton1.setBackground(new java.awt.Color(204, 204, 204));
         jButton1.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jButton1.setText("Save");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+
+
+        });
 
         jButton2.setBackground(new java.awt.Color(204, 204, 204));
         jButton2.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
@@ -399,6 +408,44 @@ public class addAgent extends javax.swing.JFrame {
         jTextField3.setText("");
         jTextField4.setText("");
         jTextField6.setText("");
+    }
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {
+        try {
+            //take the information
+            String fullName = jTextField1.getText().trim();
+            String contact = jTextField2.getText().trim();
+            String email = jTextField3.getText().trim();
+            String empId = jTextField4.getText().trim();
+            String area = jTextField5.getText().trim();
+            String address = jTextField6.getText().trim();
+
+
+            String jsonPayload = String.format(
+                    "{\"fullName\":\"%s\", \"contactNumber\":\"%s\", \"email\":\"%s\", \"employeeId\":\"%s\", \"assignedArea\":\"%s\", \"address\":\"%s\"}",
+                    fullName, contact, email, empId, area, address
+            );
+
+            // create the HTTP client and request
+            java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
+            java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
+                    .uri(java.net.URI.create("http://localhost:8081/api/agents"))
+                    .header("Content-Type", "application/json")
+                    .POST(java.net.http.HttpRequest.BodyPublishers.ofString(jsonPayload))
+                    .build();
+
+            // get the response
+            java.net.http.HttpResponse<String> response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200 || response.statusCode() == 201) {
+                javax.swing.JOptionPane.showMessageDialog(this, "the agent did include successfully");
+                jButton2ActionPerformed(null);
+            } else {
+                javax.swing.JOptionPane.showMessageDialog(this, "error: " + response.body());
+            }
+
+        } catch (Exception ex) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Cannot conncet with backend; " + ex.getMessage());
+        }
     }
 
     /**
