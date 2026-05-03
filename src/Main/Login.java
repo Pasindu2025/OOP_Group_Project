@@ -221,24 +221,24 @@ public class Login extends javax.swing.JFrame {
             String uName = usernamefeild.getText();
             String pWord = new String(pwordfeild.getPassword());
 
-            // Simple validation - Fields empty da balanna
+            // Simple validation - Check filds are empty
             if (uName.isEmpty() || pWord.isEmpty()) {
                 javax.swing.JOptionPane.showMessageDialog(this, "Please enter both Username and Password!");
                 return;
             }
 
-            // 2. JSON format ekata data hadagannawa (Backend ekata yawanna)
+            // 2.To prepare JSON format to send backend
             String json = String.format("{\"username\":\"%s\", \"password\":\"%s\"}", uName, pWord);
 
-            // 3. HttpClient use karala Backend ekata request eka yawanna
+            // 3. use HttpClient  and send request to the backend
             java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
             java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
-                    .uri(java.net.URI.create("http://localhost:8081/api/users/login")) // Port 8081 check karanna
+                    .uri(java.net.URI.create("http://localhost:8081/api/users/login"))
                     .header("Content-Type", "application/json")
                     .POST(java.net.http.HttpRequest.BodyPublishers.ofString(json))
                     .build();
 
-            // 4. Response eka check karala login wenna
+            // 4. login after check the response
             client.sendAsync(request, java.net.http.HttpResponse.BodyHandlers.ofString())
                     .thenApply(java.net.http.HttpResponse::body)
                     .thenAccept(response -> {
@@ -248,7 +248,7 @@ public class Login extends javax.swing.JFrame {
                                 User.Main userMain = new User.Main();
                                 userMain.setVisible(true);
 
-                                // Login frame eka close karanawa
+                                // close login frame
                                 this.dispose();
                             });
                         } else {

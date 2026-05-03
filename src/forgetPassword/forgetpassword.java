@@ -5,7 +5,11 @@
 package forgetPassword;
 
 import Main.*;
-
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.Scanner;
+import javax.swing.JOptionPane;
 /**
  *
  * @author dedun_wkwxx6m
@@ -212,7 +216,11 @@ public class forgetpassword extends javax.swing.JFrame {
         reserBtn.setBackground(new java.awt.Color(204, 204, 255));
         reserBtn.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         reserBtn.setText("Reset Password");
-
+        reserBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                reserBtnActionPerformed(evt);
+            }
+        });
         jLabel4.setIcon(new javax.swing.ImageIcon(getClass().getResource("/forgetPassword/confused-woman-forgetting-her-password-illustration-for-web-page-vector.jpg"))); // NOI18N
 
         password.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
@@ -377,6 +385,58 @@ public class forgetpassword extends javax.swing.JFrame {
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(() -> new forgetpassword().setVisible(true));
+    }
+
+
+    private void reserBtnActionPerformed(java.awt.event.ActionEvent evt) {
+        String userEmail = email.getText();
+        String newPassword = new String(password.getPassword());
+        String confirmPassword = new String(password1.getPassword());
+
+        // 1. Validation (check whethere empty)
+        if (userEmail.isEmpty() || userEmail.equals("Enter Your Email")) {
+            JOptionPane.showMessageDialog(this, "please enter your email");
+            return;
+        }
+
+        if (!newPassword.equals(confirmPassword)) {
+            JOptionPane.showMessageDialog(this, "Passwords doesn't match");
+            return;
+        }
+
+
+        new Thread(() -> {
+            try {
+
+                String newPass = new String(password.getPassword());
+
+
+                URL url = new URL("http://localhost:8081/api/forgot-password/request?email=" + userEmail + "&newPassword=" + newPass);
+
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+
+                int responseCode = conn.getResponseCode();
+
+                if (responseCode == 200) {
+
+                    JOptionPane.showMessageDialog(this, "Successfully reset your password");
+                    clearFields();
+                } else {
+                    JOptionPane.showMessageDialog(this, "wrong Email can not find user");
+                }
+                conn.disconnect();
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "can not connect with backend " + e.getMessage());
+            }
+        }).start();
+    }
+
+    // additional method for clear form
+    private void clearFields() {
+        email.setText("Enter Your Email");
+        password.setText("");
+        password1.setText("");
     }
 
     // Variables declaration - do not modify
