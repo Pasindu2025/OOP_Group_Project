@@ -217,20 +217,20 @@ public class Login extends javax.swing.JFrame {
 
     private void loginbtnActionPerformed(java.awt.event.ActionEvent evt) {
         try {
-            // 1. TextFields wala thiyana data tika gannawa
-            String uName = usernamefeild.getText();
-            String pWord = new String(pwordfeild.getPassword());
+            // 1. Get data from TextFields
+            String uName = usernamefeild.getText().trim();
+            String pWord = new String(pwordfeild.getPassword()).trim();
 
-            // Simple validation - Check filds are empty
+            // Simple validation
             if (uName.isEmpty() || pWord.isEmpty()) {
                 javax.swing.JOptionPane.showMessageDialog(this, "Please enter both Username and Password!");
                 return;
             }
 
-            // 2.To prepare JSON format to send backend
+            // 2. Prepare JSON format
             String json = String.format("{\"username\":\"%s\", \"password\":\"%s\"}", uName, pWord);
 
-            // 3. use HttpClient  and send request to the backend
+            // 3. Use HttpClient to send request
             java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
             java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
                     .uri(java.net.URI.create("http://localhost:8081/api/users/login"))
@@ -238,22 +238,30 @@ public class Login extends javax.swing.JFrame {
                     .POST(java.net.http.HttpRequest.BodyPublishers.ofString(json))
                     .build();
 
-            // 4. login after check the response
+            // 4. Check response and navigate to correct Dashboard
             client.sendAsync(request, java.net.http.HttpResponse.BodyHandlers.ofString())
                     .thenApply(java.net.http.HttpResponse::body)
                     .thenAccept(response -> {
-                        if (response.equals("Success")) {
-                            java.awt.EventQueue.invokeLater(() -> {
-
+                        java.awt.EventQueue.invokeLater(() -> {
+                            // Logic for Wildlife Officer
+                            if (response.equals("WILDLIFE_SUCCESS")) {
+                                javax.swing.JOptionPane.showMessageDialog(this, "Welcome Wildlife Officer!");
+                                Main.MainDashboard wildlifeDash = new Main.MainDashboard();
+                                wildlifeDash.setVisible(true);
+                                this.dispose();
+                            }
+                            // Logic for Regular User
+                            else if (response.equals("USER_SUCCESS")) {
+                                javax.swing.JOptionPane.showMessageDialog(this, "Login Successful!");
                                 User.Main userMain = new User.Main();
                                 userMain.setVisible(true);
-
-                                // close login frame
                                 this.dispose();
-                            });
-                        } else {
-                            javax.swing.JOptionPane.showMessageDialog(this, "Invalid Username or Password!");
-                        }
+                            }
+                            // If authentication fails
+                            else {
+                                javax.swing.JOptionPane.showMessageDialog(this, "Invalid Username or Password!");
+                            }
+                        });
                     })
                     .exceptionally(ex -> {
                         java.awt.EventQueue.invokeLater(() ->
