@@ -138,6 +138,8 @@ public class Dashboard extends javax.swing.JFrame {
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">
     private void initComponents() {
+        aibtn = new javax.swing.JButton();
+        sidebar = new javax.swing.JPanel();
 
         jLabel1 = new javax.swing.JLabel();
         header = new javax.swing.JPanel();
@@ -217,7 +219,12 @@ public class Dashboard extends javax.swing.JFrame {
         headerRpanel1.setAlignmentY(15.0F);
         headerRpanel1.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         headerRpanel1.setPreferredSize(new java.awt.Dimension(300, 0));
-
+        aibtn.setText("Live Detection");
+        aibtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                liveDetectionBtnActionPerformed(evt);
+            }
+        });
         homebtn.setFont(new java.awt.Font("Poppins", 1, 16)); // NOI18N
         homebtn.setForeground(new java.awt.Color(255, 255, 255));
         homebtn.setText("HOME");
@@ -846,6 +853,22 @@ public class Dashboard extends javax.swing.JFrame {
     private void injurybtnActionPerformed(java.awt.event.ActionEvent evt) {
         new ReportInjured_Agent().setVisible(true);
         this.dispose();
+    }
+    private void liveDetectionBtnActionPerformed(java.awt.event.ActionEvent evt) {
+        try {
+            String pythonScriptPath = "C:\\Users\\Lenovo\\Desktop\\Elephant_Project\\app.py";
+            String pythonPath = "python";
+
+            ProcessBuilder pb = new ProcessBuilder(pythonPath, pythonScriptPath);
+            pb.inheritIO();
+
+            pb.start();
+
+            JOptionPane.showMessageDialog(this, "Camera Starting...");
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+        }
     }
 
     private void fencebtnActionPerformed(java.awt.event.ActionEvent evt) {

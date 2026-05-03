@@ -27,6 +27,7 @@ public class ReportInjured_Agent extends javax.swing.JFrame {
         setupProfessionalUI();
         initMapViewer();
         loadInjuredData();
+
         this.setLocationRelativeTo(null);
         this.setExtendedState(JFrame.MAXIMIZED_BOTH);
     }
@@ -104,9 +105,46 @@ public class ReportInjured_Agent extends javax.swing.JFrame {
         jPanel1.add(mapViewer, new AbsoluteConstraints(50, 150, 1100, 600));
     }
 
+    private void sendDataToBackend(double lat, double lon, String sev, String desc) {
+        try {
+            // 1. URL එක සෙට් කිරීම
+            java.net.URL url = new java.net.URL("http://localhost:8081/api/injured-elephants/report");
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setDoOutput(true);
+
+            // 2. JSON Object එක සෑදීම (Libraray එකක් නැත්නම් string එකක් විදියට)
+            String jsonInputString = String.format(
+                    "{\"latitude\": %f, \"longitude\": %f, \"severity\": \"%s\", \"description\": \"%s\", \"reportedBy\": \"Agent_001\"}",
+                    lat, lon, sev, desc
+            );
+
+            // 3. Data යැවීම
+            try(java.io.OutputStream os = conn.getOutputStream()) {
+                byte[] input = jsonInputString.getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
+
+            // 4. Response එක check කිරීම
+            int code = conn.getResponseCode();
+            if (code == 200 || code == 201) {
+                JOptionPane.showMessageDialog(this, "Success: Database Updated!");
+            } else {
+                JOptionPane.showMessageDialog(this, "Error: Could not save data.");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Backend Connection Failed!");
+        }
+    }
+
     private void addNewReport(GeoPosition pos) {
         String village = getNearestVillage(pos.getLatitude(), pos.getLongitude());
         String[] types = {"Critical", "Gunshot Wound", "Limping", "Minor", "Deceased"};
+
+
         JComboBox<String> typeBox = new JComboBox<>(types);
         JTextField descField = new JTextField(village + " incident");
 
@@ -122,12 +160,16 @@ public class ReportInjured_Agent extends javax.swing.JFrame {
             // Update sidebar
             alertFeed.append("• [" + sev + "] " + desc + "\n");
 
+            sendDataToBackend(pos.getLatitude(), pos.getLongitude(), sev, desc);
+
             // Refresh map + stats
             updateStats();
             refreshMapOverlay();
             mapViewer.repaint();
         }
     }
+
+
 
     private void removeReportAt(GeoPosition clickedPos) {
         GeoPosition toRemove = null;
@@ -161,26 +203,50 @@ public class ReportInjured_Agent extends javax.swing.JFrame {
         try {
             injuredElephants.clear();
             alertFeed.setText("");
-            int crit = 0, gun = 0, limp = 0, dead = 0;
 
-            ResultSet rs = con.createStatement().executeQuery("SELECT * FROM injured_elephants");
-            while (rs.next()) {
-                GeoPosition pos = new GeoPosition(rs.getDouble("latitude"), rs.getDouble("longitude"));
-                String desc = rs.getString("description");
-                String sev = rs.getString("severity");
-                injuredElephants.put(pos, new String[]{desc, sev});
+            // ඔයාගේ Backend එක වැඩ කරන්නේ 8081 port එකේ නම් මෙතන 8081 කරන්න.
+            java.net.URL url = new java.net.URL("http://localhost:8081/api/injured-elephants/all");
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Accept", "application/json");
 
-                alertFeed.append("• [" + sev + "] " + desc + "\n");
-                if (sev.equals("Critical")) crit++;
-                else if (sev.equals("Gunshot Wound")) gun++;
-                else if (sev.equals("Limping")) limp++;
-                else if (sev.equals("Deceased")) dead++;
+            if (conn.getResponseCode() == 200) {
+                // Jackson ObjectMapper පාවිච්චි කරලා JSON එක කියවීම
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+
+                // InputStream එක කෙලින්ම JsonNode එකකට (Tree structure එකකට) ගන්නවා
+                com.fasterxml.jackson.databind.JsonNode rootNode = mapper.readTree(conn.getInputStream());
+
+                // Array එක Loop කරලා එකින් එක දත්ත අරගෙන Map එකට දානවා
+                for (com.fasterxml.jackson.databind.JsonNode node : rootNode) {
+                    double lat = node.get("latitude").asDouble();
+                    double lon = node.get("longitude").asDouble();
+
+                    // Description සහ Severity හිස් නම් default අගයක් දෙනවා (Errors එන එක නවත්වන්න)
+                    String desc = node.has("description") && !node.get("description").isNull() ? node.get("description").asText() : "No Description";
+                    String sev = node.has("severity") && !node.get("severity").isNull() ? node.get("severity").asText() : "Unknown";
+
+                    GeoPosition pos = new GeoPosition(lat, lon);
+                    injuredElephants.put(pos, new String[]{desc, sev});
+
+                    // Sidebar එකටත් දත්ත එකතු කරනවා
+                    alertFeed.append("• [" + sev + "] " + desc + "\n");
+                }
+
+                // UI එක Update කිරීම
+                updateStats();
+                refreshMapOverlay();
+                mapViewer.repaint();
+                System.out.println("Data successfully loaded from Backend!");
+
+            } else {
+                System.out.println("Failed to load data. HTTP Code: " + conn.getResponseCode());
             }
 
-            statsArea.setText("--- STATUS COUNTS ---\n🚨 Critical: " + crit + "\n🔫 Gunshot: " + gun +
-                    "\n🐘 Limping: " + limp + "\n💀 Deceased: " + dead + "\n---------------------");
-            refreshMapOverlay();
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            System.out.println("Backend Connection Error during Load: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void refreshMapOverlay() {
@@ -217,12 +283,18 @@ public class ReportInjured_Agent extends javax.swing.JFrame {
 
     private String getNearestVillage(double lat, double lon) {
         try {
-            PreparedStatement pst = con.prepareStatement("SELECT village FROM sl_locations ORDER BY (ABS(latitude - ?) + ABS(longitude - ?)) LIMIT 1");
-            pst.setDouble(1, lat); pst.setDouble(2, lon);
-            ResultSet rs = pst.executeQuery();
-            if (rs.next()) return rs.getString("village");
-        } catch (Exception e) { e.printStackTrace(); }
-        return "Unknown Location";
+            // Direct DB Connection වෙනුවට Spring Boot API එකට කතා කරන්න
+            java.net.URL url = new java.net.URL("http://localhost:8081/api/locations/nearest?lat=" + lat + "&lon=" + lon);
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+
+            java.io.BufferedReader in = new java.io.BufferedReader(new java.io.InputStreamReader(conn.getInputStream()));
+            String village = in.readLine();
+            in.close();
+            return village;
+        } catch (Exception e) {
+            return "Unknown Location"; // API එක වැඩ නැත්නම් default එකක්
+        }
     }
 
     private void updateStats() {
