@@ -219,6 +219,7 @@ public class Dashboard extends javax.swing.JFrame {
         headerRpanel1.setAlignmentY(15.0F);
         headerRpanel1.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         headerRpanel1.setPreferredSize(new java.awt.Dimension(300, 0));
+        aibtn.setText("Live Detection");
         aibtn.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 liveDetectionBtnActionPerformed(evt);
@@ -814,24 +815,6 @@ public class Dashboard extends javax.swing.JFrame {
     private void injurybtnMouseExited(java.awt.event.MouseEvent evt) {
         injurybtn.setForeground(java.awt.Color.WHITE);
     }
-    private void liveDetectionBtnActionPerformed(java.awt.event.ActionEvent evt) {
-        try {
-            String pythonScriptPath = "C:\\Users\\Lenovo\\Desktop\\Elephant_Project\\app.py";
-            String pythonPath = "python";
-
-            ProcessBuilder pb = new ProcessBuilder(pythonPath, pythonScriptPath);
-            pb.inheritIO();
-
-            pb.start();
-
-            JOptionPane.showMessageDialog(this, "Camera Starting...");
-
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
-        }
-    }
-
-
 
     private void fencebtnMouseEntered(java.awt.event.MouseEvent evt) {
         fencebtn.setForeground(new java.awt.Color(255, 153, 0));
@@ -870,6 +853,22 @@ public class Dashboard extends javax.swing.JFrame {
     private void injurybtnActionPerformed(java.awt.event.ActionEvent evt) {
         new ReportInjured_Agent().setVisible(true);
         this.dispose();
+    }
+    private void liveDetectionBtnActionPerformed(java.awt.event.ActionEvent evt) {
+        try {
+            String pythonScriptPath = "C:\\Users\\Lenovo\\Desktop\\Elephant_Project\\app.py";
+            String pythonPath = "python";
+
+            ProcessBuilder pb = new ProcessBuilder(pythonPath, pythonScriptPath);
+            pb.inheritIO();
+
+            pb.start();
+
+            JOptionPane.showMessageDialog(this, "Camera Starting...");
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+        }
     }
 
     private void fencebtnActionPerformed(java.awt.event.ActionEvent evt) {
