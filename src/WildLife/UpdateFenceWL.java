@@ -13,22 +13,38 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.swing.*;
 import Main.*;
+import java.net.URL;
+import java.net.HttpURLConnection;
+import java.io.OutputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
 public class UpdateFenceWL extends javax.swing.JFrame {
 
     private JXMapViewer mapViewer;
-    private Connection con;
     private JTextArea alertFeed;
     private JTextField searchField;
 
 
     // Map to store GPS position as Key, and [PlaceName, Status] as Value
-    private final Map<GeoPosition, String[]> activeFences = new HashMap<>();
+    private final Map<GeoPosition, Object[]> activeFences = new HashMap<>();
+    private GeoPosition searchedLocation = null;
+    private Connection con;
 
     public UpdateFenceWL() {
         initComponents();
         setupCustomComponents(); // Initialize Search and Feed
         initMapViewer();
+        try {
+            con = DriverManager.getConnection(
+                    "jdbc:mysql://localhost:3306/oop_project",
+                    "root",
+                    ""
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        loadFencesFromAPI();
         this.setLocationRelativeTo(null);
         this.setExtendedState(JFrame.MAXIMIZED_BOTH);
     }
@@ -49,51 +65,74 @@ public class UpdateFenceWL extends javax.swing.JFrame {
         JScrollPane scroll = new JScrollPane(alertFeed);
         scroll.setBorder(BorderFactory.createTitledBorder("Active Fence Status"));
         jPanel1.add(scroll, new AbsoluteConstraints(1100, 260, 350, 500));
+
+        searchField.addActionListener(e -> {
+            String query = searchField.getText().trim();
+
+            if (query.isEmpty()) return;
+
+            // 1️⃣ check fences
+            if (!searchFenceReturn(query)) {
+
+                // 2️⃣ check DB
+                if (!searchFromDatabaseReturn(query)) {
+
+                    JOptionPane.showMessageDialog(this, "Location not found!");
+                }
+            }
+        });
     }
 
     private void initMapViewer() {
-        // 1. MUST INITIALIZE THE OBJECT FIRST
+
         mapViewer = new JXMapViewer();
 
         System.setProperty("http.agent", "GajaSafeApp/1.0");
         TileFactoryInfo info = new OSMTileFactoryInfo("GajaSafe", "https://tile.openstreetmap.org");
         mapViewer.setTileFactory(new DefaultTileFactory(info));
 
-        // Start center: Sri Lanka
         mapViewer.setAddressLocation(new GeoPosition(7.8731, 80.7718));
         mapViewer.setZoom(10);
 
-        // 2. NOW ADD LISTENERS (Object is no longer null)
         mapViewer.addMouseWheelListener(new org.jxmapviewer.input.ZoomMouseWheelListenerCenter(mapViewer));
         mapViewer.addMouseMotionListener(new org.jxmapviewer.input.PanMouseInputListener(mapViewer));
 
-        // HOVER LOGIC: Show name when cursor is over a marker
-        // Inside initMapViewer, add this listener AFTER mapViewer = new JXMapViewer();
+        // HOVER
         mapViewer.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
             @Override
             public void mouseMoved(java.awt.event.MouseEvent e) {
                 GeoPosition mousePos = mapViewer.convertPointToGeoPosition(e.getPoint());
                 boolean found = false;
 
-                for (Map.Entry<GeoPosition, String[]> entry : activeFences.entrySet()) {
+                for (Map.Entry<GeoPosition, Object[]> entry : activeFences.entrySet()) {
+
+                    Object[] data = entry.getValue();
+                    String name = (String) data[0];
+                    String status = (String) data[1];
+
                     double latDiff = Math.abs(entry.getKey().getLatitude() - mousePos.getLatitude());
                     double lonDiff = Math.abs(entry.getKey().getLongitude() - mousePos.getLongitude());
 
                     if (latDiff < 0.002 && lonDiff < 0.002) {
-                        // Shows the custom name you entered
-                        mapViewer.setToolTipText("Fence: " + entry.getValue()[0] + " (" + entry.getValue()[1] + ")");
+                        mapViewer.setToolTipText("Fence: " + name + " (" + status + ")");
                         found = true;
                         break;
                     }
                 }
                 if (!found) mapViewer.setToolTipText(null);
             }
-
         });
 
+        // CLICK
         mapViewer.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
+
+                // 🔴 CLEAR SEARCH HIGHLIGHT
+                searchedLocation = null;
+                refreshMapOverlay();
+                mapViewer.repaint();
+
                 Point2D pt = e.getPoint();
                 Rectangle rect = mapViewer.getViewportBounds();
                 Point2D actualPt = new Point2D.Double(pt.getX() + rect.getX(), pt.getY() + rect.getY());
@@ -102,13 +141,13 @@ public class UpdateFenceWL extends javax.swing.JFrame {
                 if (SwingUtilities.isLeftMouseButton(e) && e.getClickCount() == 2) {
                     addNewFence(clickedPos);
                 }
+
                 if (SwingUtilities.isRightMouseButton(e)) {
                     removeFenceAt(clickedPos);
                 }
             }
         });
 
-        // 3. ADD TO PANEL LAST
         jPanel1.add(mapViewer, new AbsoluteConstraints(80, 180, 950, 580));
     }
 
@@ -129,126 +168,241 @@ public class UpdateFenceWL extends javax.swing.JFrame {
     private void addNewFence(GeoPosition pos) {
         String village = getNearestVillage(pos.getLatitude(), pos.getLongitude());
 
-        // 1. Setup a custom panel for the dialog
-        JTextField customNameField = new JTextField(village); // Pre-filled with village name
-        String[] options = {"OK", "BROKEN", "ELECTRIC FAILURE", "DAMAGE", "OTHER"};
-        JComboBox<String> statusBox = new JComboBox<>(options);
+        JTextField customNameField = new JTextField(village);
 
         Object[] message = {
                 "Detected Location:", new JLabel(village),
-                "Custom Fence Name:", customNameField,
-                "Current Status:", statusBox
+                "Fence Name:", customNameField
         };
 
         int option = JOptionPane.showConfirmDialog(this, message, "Add New Fence", JOptionPane.OK_CANCEL_OPTION);
 
         if (option == JOptionPane.OK_OPTION) {
             String finalName = customNameField.getText().trim();
-            String status = (String) statusBox.getSelectedItem();
 
-            // 2. CHECK FOR DUPLICATE NAME (Check if this custom name already exists)
-            for (String[] data : activeFences.values()) {
-                if (data[0].equalsIgnoreCase(finalName)) {
-                    JOptionPane.showMessageDialog(this, "The name '" + finalName + "' is already in use.");
+            // duplicate check
+            for (Object[] data : activeFences.values()) {
+
+                String name = (String) data[0];
+
+                if (name.equalsIgnoreCase(finalName)) {
+                    JOptionPane.showMessageDialog(this, "Name already exists!");
                     return;
                 }
             }
 
-            // 3. Save to DB and Refresh
             if (!finalName.isEmpty()) {
-                activeFences.put(pos, new String[]{finalName, status});
+                try {
+                    URL url = new URL("http://localhost:8081/api/fences");
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
-                alertFeed.append("📍 " + finalName + " -> STATUS: " + status + "\n");
+                    conn.setRequestMethod("POST");
+                    conn.setRequestProperty("Content-Type", "application/json");
+                    conn.setDoOutput(true);
 
-                refreshMapOverlay();
-                mapViewer.repaint();
+                    // 🔥 DEFAULT STATUS
+                    String jsonInput = String.format(
+                            "{\"latitude\": %f, \"longitude\": %f, \"placeName\": \"%s\", \"status\": \"OK\"}",
+                            pos.getLatitude(),
+                            pos.getLongitude(),
+                            finalName
+                    );
+
+                    OutputStream os = conn.getOutputStream();
+                    os.write(jsonInput.getBytes());
+                    os.flush();
+                    os.close();
+
+                    int responseCode = conn.getResponseCode();
+                    System.out.println("ADD RESPONSE: " + responseCode);
+
+                    loadFencesFromAPI();
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
 
     private void refreshMapOverlay() {
         Painter<JXMapViewer> fencePainter = (Graphics2D g, JXMapViewer map, int w, int h) -> {
+
             g = (Graphics2D) g.create();
             g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             Rectangle rect = map.getViewportBounds();
 
-            for (Map.Entry<GeoPosition, String[]> entry : activeFences.entrySet()) {
+            // 🔵 DRAW ALL FENCES (UPDATED 🔥)
+            for (Map.Entry<GeoPosition, Object[]> entry : activeFences.entrySet()) {
+
+                Object[] data = entry.getValue();
+
+                String status = (String) data[1];
+                int radius = (int) data[2];
+
+                Color color = getStatusColor(status);
+
                 Point2D pt = map.getTileFactory().geoToPixel(entry.getKey(), map.getZoom());
                 int x = (int) pt.getX() - rect.x;
                 int y = (int) pt.getY() - rect.y;
 
-                // Get the status string from the array (Index 1)
-                String statusValue = entry.getValue()[1];
-                Color color = getStatusColor(statusValue);
+                // 🔥 SCALE (adjust if needed)
+                int r = radius / 25;
 
-                // Draw the Circle
-                g.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 160)); // 160 = Alpha/Transparency
-                g.fillOval(x - 12, y - 12, 24, 24);
+                // 🔴 FILLED AREA (WATAK)
+                g.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 80));
+                g.fillOval(x - r, y - r, r * 2, r * 2);
 
-                g.setColor(Color.WHITE); // Inner ring for visibility
-                g.setStroke(new BasicStroke(1));
-                g.drawOval(x - 8, y - 8, 16, 16);
-
-                g.setColor(color); // Outer solid border
-                g.setStroke(new BasicStroke(3));
-                g.drawOval(x - 12, y - 12, 24, 24);
+                // 🔴 BORDER
+                g.setColor(color);
+                g.setStroke(new BasicStroke(2));
+                g.drawOval(x - r, y - r, r * 2, r * 2);
             }
+
+            // 🔴 SEARCH HIGHLIGHT (KEEP SAME)
+            if (searchedLocation != null) {
+                Point2D pt = map.getTileFactory().geoToPixel(searchedLocation, map.getZoom());
+                int x = (int) pt.getX() - rect.x;
+                int y = (int) pt.getY() - rect.y;
+
+                g.setColor(new Color(255, 0, 0, 120));
+                g.fillOval(x - 20, y - 20, 40, 40);
+
+                g.setColor(Color.RED);
+                g.setStroke(new BasicStroke(3));
+                g.drawOval(x - 20, y - 20, 40, 40);
+            }
+
             g.dispose();
         };
+
         mapViewer.setOverlayPainter(fencePainter);
     }
 
-    private void searchFence(String query) {
-        if (query.isEmpty()) return;
-        boolean found = false;
-        for (Map.Entry<GeoPosition, String[]> entry : activeFences.entrySet()) {
-            if (entry.getValue()[0].toLowerCase().contains(query.toLowerCase())) {
-                mapViewer.setAddressLocation(entry.getKey());
+    private boolean searchFenceReturn(String query) {
+        for (Map.Entry<GeoPosition, Object[]> entry : activeFences.entrySet()) {
+
+            if (((String) entry.getValue()[0]).toLowerCase().contains(query.toLowerCase())) {
+
+                searchedLocation = entry.getKey();
+                mapViewer.setAddressLocation(searchedLocation);
                 mapViewer.setZoom(5);
-                JOptionPane.showMessageDialog(this, "FOUND: " + entry.getValue()[0] + "\nStatus: " + entry.getValue()[1]);
-                found = true;
-                break;
+
+                refreshMapOverlay();
+                return true;
             }
         }
-        if (!found) JOptionPane.showMessageDialog(this, "Village not found in active fences.");
+        return false;
+    }
+
+    private boolean searchFromDatabaseReturn(String place) {
+        try {
+            PreparedStatement ps = con.prepareStatement(
+                    "SELECT latitude, longitude FROM fence_reference_locations WHERE name LIKE ? LIMIT 1"
+            );
+
+            ps.setString(1, "%" + place + "%");
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                double lat = rs.getDouble("latitude");
+                double lon = rs.getDouble("longitude");
+
+                GeoPosition pos = new GeoPosition(lat, lon);
+
+                mapViewer.setAddressLocation(pos);
+                mapViewer.setZoom(5);
+
+                JOptionPane.showMessageDialog(this, "Found: " + place);
+                return true;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    private void loadFencesFromAPI() {
+        try {
+            URL url = new URL("http://localhost:8081/api/fences");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(conn.getInputStream())
+            );
+
+            StringBuilder response = new StringBuilder();
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+
+            reader.close();
+
+            String json = response.toString();
+
+            // clear old
+            activeFences.clear();
+            alertFeed.setText("");
+
+            // 👉 SPLIT CORRECTLY
+            String[] objects = json.split("\\},\\{");
+
+            for (String obj : objects) {
+
+                obj = obj.replace("[", "")
+                        .replace("]", "")
+                        .replace("{", "")
+                        .replace("}", "");
+
+                String[] parts = obj.split(",");
+
+                double lat = 0, lon = 0;
+                String name = "", status = "";
+
+                for (String p : parts) {
+                    String[] kv = p.split(":");
+
+                    if (kv.length < 2) continue;
+
+                    String key = kv[0].replace("\"", "").trim();
+                    String value = kv[1].replace("\"", "").trim();
+
+                    switch (key) {
+                        case "latitude": lat = Double.parseDouble(value); break;
+                        case "longitude": lon = Double.parseDouble(value); break;
+                        case "placeName": name = value; break;
+                        case "status": status = value; break;
+                    }
+                }
+
+                GeoPosition pos = new GeoPosition(lat, lon);
+                int radius = 500; //meters
+
+                activeFences.put(pos, new Object[]{name, status, radius});
+                alertFeed.append("📍 " + name + " -> STATUS: " + status + "\n");
+            }
+
+            refreshMapOverlay();
+            mapViewer.repaint();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private String getNearestVillage(double lat, double lon) {
-        String village = "Unknown";
-        try {
-            PreparedStatement pst = con.prepareStatement("SELECT village FROM sl_locations " +
-                    "ORDER BY (ABS(latitude - ?) + ABS(longitude - ?)) LIMIT 1");
-            pst.setDouble(1, lat);
-            pst.setDouble(2, lon);
-            ResultSet rs = pst.executeQuery();
-            if (rs.next()) village = rs.getString("village");
-        } catch (Exception e) { e.printStackTrace(); }
-        return village;
-    }
-
-    private void loadExistingAlerts() {
-        try {
-            activeFences.clear();
-            alertFeed.setText(""); // This "removes" deleted items from the side panel automatically
-
-            ResultSet rs = con.createStatement().executeQuery("SELECT * FROM fences");
-            while (rs.next()) {
-                GeoPosition pos = new GeoPosition(rs.getDouble("latitude"), rs.getDouble("longitude"));
-                String name = rs.getString("place_name");
-                String status = rs.getString("status");
-
-                activeFences.put(pos, new String[]{name, status});
-
-                // Re-build the sidebar text
-                alertFeed.append("📍 " + name + " -> STATUS: " + status + "\n");
-            }
-            refreshMapOverlay();
-            mapViewer.repaint();
-        } catch (Exception e) { e.printStackTrace(); }
+        return "Custom Location";
     }
 
     private void removeFenceAt(GeoPosition clickedPos) {
         GeoPosition toRemove = null;
+
         for (GeoPosition pos : activeFences.keySet()) {
             if (Math.abs(pos.getLatitude() - clickedPos.getLatitude()) < 0.005 &&
                     Math.abs(pos.getLongitude() - clickedPos.getLongitude()) < 0.005) {
@@ -258,18 +412,29 @@ public class UpdateFenceWL extends javax.swing.JFrame {
         }
 
         if (toRemove != null) {
-            if (JOptionPane.showConfirmDialog(this, "Remove fence?", "Delete", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+            if (JOptionPane.showConfirmDialog(this, "Remove fence?", "Delete",
+                    JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+
                 try {
-                    activeFences.remove(toRemove);
+                    String fullUrl = "http://localhost:8081/api/fences?latitude="
+                            + toRemove.getLatitude()
+                            + "&longitude="
+                            + toRemove.getLongitude();
 
-                    alertFeed.setText("");
-                    for (String[] data : activeFences.values()) {
-                        alertFeed.append("📍 " + data[0] + " -> STATUS: " + data[1] + "\n");
-                    }
+                    System.out.println("DELETE URL: " + fullUrl);
 
-                    refreshMapOverlay();
-                    mapViewer.repaint();
-                } catch (Exception ex) { ex.printStackTrace(); }
+                    URL url = new URL(fullUrl);
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("DELETE");
+
+                    int responseCode = conn.getResponseCode();
+                    System.out.println("DELETE RESPONSE: " + responseCode);
+
+                    loadFencesFromAPI();
+
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
             }
         }
     }
@@ -281,10 +446,16 @@ public class UpdateFenceWL extends javax.swing.JFrame {
 
         if (confirm == JOptionPane.YES_OPTION) {
             try {
-                con.createStatement().executeUpdate("TRUNCATE TABLE active_alerts");
-                activeFences.clear();
-                loadExistingAlerts();
-                mapViewer.repaint();
+                URL url = new URL("http://localhost:8081/api/fences");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("DELETE");
+
+                int responseCode = conn.getResponseCode();
+                System.out.println("CLEAR ALL RESPONSE: " + responseCode);
+
+                // Reload map data
+                loadFencesFromAPI();
+
             } catch (Exception e) {
                 e.printStackTrace();
             }

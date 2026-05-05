@@ -25,11 +25,31 @@ public class UpdateFenceAgent extends javax.swing.JFrame {
 
     // Map to store GPS position as Key, and [PlaceName, Status] as Value
     private final Map<GeoPosition, String[]> activeFences = new HashMap<>();
+    private GeoPosition selectedFence = null;
 
     public UpdateFenceAgent() {
+
+        // 🔥 1. CONNECT DATABASE FIRST
+        try {
+            con = DriverManager.getConnection(
+                    "jdbc:mysql://localhost:3306/oop_project",
+                    "root",
+                    ""
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "DB Connection Failed!");
+            return; // stop if no DB
+        }
+
+        // 🔥 2. INIT UI
         initComponents();
-        setupCustomComponents(); // Initialize Search and Feed
+        setupCustomComponents();
         initMapViewer();
+
+        // 🔥 3. LOAD DATA
+        loadExistingAlerts();
+
         this.setLocationRelativeTo(null);
         this.setExtendedState(JFrame.MAXIMIZED_BOTH);
     }
@@ -102,7 +122,24 @@ public class UpdateFenceAgent extends javax.swing.JFrame {
                 GeoPosition clickedPos = mapViewer.getTileFactory().pixelToGeo(actualPt, mapViewer.getZoom());
 
                 // Trigger the Update Logic on Click
-                //updateExistingFenceStatus(clickedPos);
+                GeoPosition clicked = mapViewer.convertPointToGeoPosition(e.getPoint());
+
+                for (Map.Entry<GeoPosition, String[]> entry : activeFences.entrySet()) {
+
+                    double latDiff = Math.abs(entry.getKey().getLatitude() - clicked.getLatitude());
+                    double lonDiff = Math.abs(entry.getKey().getLongitude() - clicked.getLongitude());
+
+                    if (latDiff < 0.003 && lonDiff < 0.003) {
+
+                        selectedFence = entry.getKey();
+
+                        String name = entry.getValue()[0];
+                        String status = entry.getValue()[1];
+
+                        showFenceOptions(name, status);
+                        break;
+                    }
+                }
             }
         });
 
@@ -154,6 +191,98 @@ public class UpdateFenceAgent extends javax.swing.JFrame {
         mapViewer.setOverlayPainter(fencePainter);
     }
 
+    private void showFenceOptions(String name, String status) {
+
+        String[] options = {"UPDATE STATUS", "DELETE", "CANCEL"};
+
+        int choice = JOptionPane.showOptionDialog(
+                this,
+                "Fence: " + name + "\nStatus: " + status,
+                "Manage Fence",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.INFORMATION_MESSAGE,
+                null,
+                options,
+                options[0]
+        );
+
+        if (choice == 0) {
+            updateFenceStatus();
+        } else if (choice == 1) {
+            deleteFence();
+        }
+    }
+
+    private void updateFenceStatus() {
+
+        if (selectedFence == null) return;
+
+        String[] statuses = {"OK", "BROKEN", "ELECTRIC FAILURE", "DAMAGE"};
+
+        String newStatus = (String) JOptionPane.showInputDialog(
+                this,
+                "Select new status:",
+                "Update Status",
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                statuses,
+                statuses[0]
+        );
+
+        if (newStatus != null) {
+
+            try {
+                PreparedStatement ps = con.prepareStatement(
+                        "UPDATE fence SET status=? WHERE latitude=? AND longitude=?"
+                );
+
+                ps.setString(1, newStatus);
+                ps.setDouble(2, selectedFence.getLatitude());
+                ps.setDouble(3, selectedFence.getLongitude());
+
+                ps.executeUpdate();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            loadExistingAlerts(); // 🔥 refresh UI
+            JOptionPane.showMessageDialog(this, "Status Updated!");
+        }
+    }
+
+    private void deleteFence() {
+
+        if (selectedFence == null) return;
+
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Delete this fence?",
+                "Confirm",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (confirm == JOptionPane.YES_OPTION) {
+
+            try {
+                PreparedStatement ps = con.prepareStatement(
+                        "DELETE FROM fence WHERE latitude=? AND longitude=?"
+                );
+
+                ps.setDouble(1, selectedFence.getLatitude());
+                ps.setDouble(2, selectedFence.getLongitude());
+
+                ps.executeUpdate();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            loadExistingAlerts(); // 🔥 refresh
+            JOptionPane.showMessageDialog(this, "Fence Deleted!");
+        }
+    }
+
     private void searchFence(String query) {
         if (query.isEmpty()) return;
         boolean found = false;
@@ -188,7 +317,7 @@ public class UpdateFenceAgent extends javax.swing.JFrame {
             activeFences.clear();
             alertFeed.setText(""); // This "removes" deleted items from the side panel automatically
 
-            ResultSet rs = con.createStatement().executeQuery("SELECT * FROM fences");
+            ResultSet rs = con.createStatement().executeQuery("SELECT * FROM fence");
             while (rs.next()) {
                 GeoPosition pos = new GeoPosition(rs.getDouble("latitude"), rs.getDouble("longitude"));
                 String name = rs.getString("place_name");
