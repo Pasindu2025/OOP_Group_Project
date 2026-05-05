@@ -60,6 +60,10 @@ public class UpdateFenceAgent extends javax.swing.JFrame {
         searchField = new JTextField();
         searchField.setBorder(BorderFactory.createTitledBorder("Search Village Name (Press Enter)"));
         jPanel1.add(searchField, new AbsoluteConstraints(1100, 180, 350, 50));
+        searchField.addActionListener(e -> {
+            String text = searchField.getText();
+            searchFence(text);
+        });
 
 
         // Alert Feed
@@ -283,7 +287,7 @@ public class UpdateFenceAgent extends javax.swing.JFrame {
         }
     }
 
-    private void searchFence(String query) {
+   /* private void searchFence(String query) {
         if (query.isEmpty()) return;
         boolean found = false;
         for (Map.Entry<GeoPosition, String[]> entry : activeFences.entrySet()) {
@@ -296,6 +300,36 @@ public class UpdateFenceAgent extends javax.swing.JFrame {
             }
         }
         if (!found) JOptionPane.showMessageDialog(this, "Village not found in active fences.");
+    }*/
+    private void searchFence(String query) {
+
+        if (query == null || query.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Enter a village name!");
+            return;
+        }
+
+        boolean found = false;
+
+        for (Map.Entry<GeoPosition, String[]> entry : activeFences.entrySet()) {
+
+            String place = entry.getValue()[0];
+
+            if (place.toLowerCase().contains(query.toLowerCase())) {
+
+                mapViewer.setAddressLocation(entry.getKey());
+                mapViewer.setZoom(5);
+
+                JOptionPane.showMessageDialog(this,
+                        "FOUND:\n" + place + "\nStatus: " + entry.getValue()[1]);
+
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            JOptionPane.showMessageDialog(this, "Village not found.");
+        }
     }
 
 
