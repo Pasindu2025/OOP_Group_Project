@@ -217,20 +217,19 @@ public class Login extends javax.swing.JFrame {
 
     private void loginbtnActionPerformed(java.awt.event.ActionEvent evt) {
         try {
-            // 1. Get data from TextFields
+
             String uName = usernamefeild.getText().trim();
             String pWord = new String(pwordfeild.getPassword()).trim();
 
-            // Simple validation
             if (uName.isEmpty() || pWord.isEmpty()) {
                 javax.swing.JOptionPane.showMessageDialog(this, "Please enter both Username and Password!");
                 return;
             }
 
-            // 2. Prepare JSON format
+
             String json = String.format("{\"username\":\"%s\", \"password\":\"%s\"}", uName, pWord);
 
-            // 3. Use HttpClient to send request
+
             java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
             java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
                     .uri(java.net.URI.create("http://localhost:8081/api/users/login"))
@@ -238,26 +237,38 @@ public class Login extends javax.swing.JFrame {
                     .POST(java.net.http.HttpRequest.BodyPublishers.ofString(json))
                     .build();
 
-            // 4. Check response and navigate to correct Dashboard
+
             client.sendAsync(request, java.net.http.HttpResponse.BodyHandlers.ofString())
                     .thenApply(java.net.http.HttpResponse::body)
                     .thenAccept(response -> {
                         java.awt.EventQueue.invokeLater(() -> {
-                            // Logic for Wildlife Officer
+
+
                             if (response.equals("WILDLIFE_SUCCESS")) {
                                 javax.swing.JOptionPane.showMessageDialog(this, "Welcome Wildlife Officer!");
                                 Main.MainDashboard wildlifeDash = new Main.MainDashboard();
                                 wildlifeDash.setVisible(true);
                                 this.dispose();
                             }
-                            // Logic for Regular User
+
+
+                            else if (response.equals("AGENT_SUCCESS")) {
+                                javax.swing.JOptionPane.showMessageDialog(this, "Welcome Agent! Login Successful.");
+
+                                Agent.Dashboard agentDash = new Agent.Dashboard();
+                                agentDash.setVisible(true);
+                                this.dispose();
+                            }
+
+
                             else if (response.equals("USER_SUCCESS")) {
                                 javax.swing.JOptionPane.showMessageDialog(this, "Login Successful!");
                                 User.Main userMain = new User.Main();
                                 userMain.setVisible(true);
                                 this.dispose();
                             }
-                            // If authentication fails
+
+
                             else {
                                 javax.swing.JOptionPane.showMessageDialog(this, "Invalid Username or Password!");
                             }
