@@ -111,7 +111,7 @@ public class changePassword extends javax.swing.JFrame {
         logoutBtn.setBackground(new java.awt.Color(0, 0, 0));
         logoutBtn.setFont(new java.awt.Font("Poppins", 1, 16)); // NOI18N
         logoutBtn.setForeground(new java.awt.Color(255, 255, 255));
-        logoutBtn.setText("LOGOUT");
+        logoutBtn.setText("LOGIN");
         logoutBtn.setBorder(null);
         logoutBtn.setBorderPainted(false);
         logoutBtn.setContentAreaFilled(false);
@@ -362,8 +362,8 @@ public class changePassword extends javax.swing.JFrame {
     }
 
     private void logoutBtnActionPerformed(java.awt.event.ActionEvent evt) {
-        Home home = new Home();
-        home.setVisible(true);
+        Login login = new Login();
+        login.setVisible(true);
         this.dispose();
     }
 
