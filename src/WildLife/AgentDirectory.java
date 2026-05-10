@@ -583,13 +583,14 @@ class ButtonEditor extends javax.swing.DefaultCellEditor {
             String name = String.valueOf(table.getValueAt(row, 1));
 
             int choice = JOptionPane.showConfirmDialog(table,
-                    "Delete agent \"" + name + "\"? This cannot be undone.",
+                    "Delete agent \"" + name + "\"?",
                     "Confirm Delete", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if (choice == JOptionPane.YES_OPTION) {
+                deleteAgentFromDatabase(id, row);
 
                 ((DefaultTableModel) table.getModel()).removeRow(currentRow);
             }
-            deleteAgentFromDatabase(id, row);
+
         });
 
     }

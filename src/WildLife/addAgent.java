@@ -421,7 +421,7 @@ public class addAgent extends javax.swing.JFrame {
 
 
             String jsonPayload = String.format(
-                    "{\"fullName\":\"%s\", \"contactNumber\":\"%s\", \"email\":\"%s\", \"employeeId\":\"%s\", \"assignedArea\":\"%s\", \"address\":\"%s\"}",
+                    "{\"fullName\":\"%s\", \"contactNumber\":\"%s\", \"email\":\"%s\", \"id\":\"%s\", \"assignedArea\":\"%s\", \"address\":\"%s\"}",
                     fullName, contact, email, empId, area, address
             );
 
