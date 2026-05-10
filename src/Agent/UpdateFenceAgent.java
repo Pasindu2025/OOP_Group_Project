@@ -1,7 +1,7 @@
 
 package Agent;
 
-import Main.AboutUs;
+//import Main.AboutUs;
 import Main.Home;
 import org.jxmapviewer.JXMapViewer;
 import org.jxmapviewer.OSMTileFactoryInfo;
@@ -90,8 +90,17 @@ public class UpdateFenceAgent extends javax.swing.JFrame {
         mapViewer.setZoom(10);
 
         // 2. NOW ADD LISTENERS (Object is no longer null)
-        mapViewer.addMouseWheelListener(new org.jxmapviewer.input.ZoomMouseWheelListenerCenter(mapViewer));
-        mapViewer.addMouseMotionListener(new org.jxmapviewer.input.PanMouseInputListener(mapViewer));
+        // Zoom using mouse wheel
+        mapViewer.addMouseWheelListener(
+                new org.jxmapviewer.input.ZoomMouseWheelListenerCursor(mapViewer)
+        );
+
+        // Drag / move map with mouse
+        org.jxmapviewer.input.PanMouseInputListener panListener =
+                new org.jxmapviewer.input.PanMouseInputListener(mapViewer);
+
+        mapViewer.addMouseListener(panListener);
+        mapViewer.addMouseMotionListener(panListener);
 
         // HOVER LOGIC: Show name when cursor is over a marker
         // Inside initMapViewer, add this listener AFTER mapViewer = new JXMapViewer();
@@ -170,26 +179,70 @@ public class UpdateFenceAgent extends javax.swing.JFrame {
             Rectangle rect = map.getViewportBounds();
 
             for (Map.Entry<GeoPosition, String[]> entry : activeFences.entrySet()) {
+
                 Point2D pt = map.getTileFactory().geoToPixel(entry.getKey(), map.getZoom());
+
                 int x = (int) pt.getX() - rect.x;
                 int y = (int) pt.getY() - rect.y;
 
-                // Get the status string from the array (Index 1)
                 String statusValue = entry.getValue()[1];
                 Color color = getStatusColor(statusValue);
 
-                // Draw the Circle
-                g.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 160)); // 160 = Alpha/Transparency
-                g.fillOval(x - 12, y - 12, 24, 24);
+                int r = 20;
 
-                g.setColor(Color.WHITE); // Inner ring for visibility
+                // ================= SMALL FENCE AREA =================
+
+                g.setColor(new Color(
+                        color.getRed(),
+                        color.getGreen(),
+                        color.getBlue(),
+                        40
+                ));
+
+                g.fillOval(x - r, y - r, r * 2, r * 2);
+
+                g.setColor(new Color(
+                        color.getRed(),
+                        color.getGreen(),
+                        color.getBlue(),
+                        120
+                ));
+
+                g.setStroke(new BasicStroke(2));
+                g.drawOval(x - r, y - r, r * 2, r * 2);
+
+                // ================= GOOGLE MAP STYLE MARKER =================
+
+                // Marker shadow
+                g.setColor(new Color(0, 0, 0, 50));
+                g.fillOval(x - 8, y + 2, 16, 8);
+
+                // Pin body
+                g.setColor(color);
+                g.fillOval(x - 10, y - 28, 20, 20);
+
+                // Pin tail
+                Polygon pin = new Polygon();
+                pin.addPoint(x, y);
+                pin.addPoint(x - 6, y - 14);
+                pin.addPoint(x + 6, y - 14);
+
+                g.fillPolygon(pin);
+
+                // Small center circle
+                g.setColor(Color.white);
+                g.fillOval(x - 4, y - 22, 8, 8);
+
+                // Small border
+                g.setColor(Color.white);
+                g.drawOval(x - 4, y - 22, 8, 8);
+
+                // Outer border
+                g.setColor(Color.BLACK);
                 g.setStroke(new BasicStroke(1));
-                g.drawOval(x - 8, y - 8, 16, 16);
-
-                g.setColor(color); // Outer solid border
-                g.setStroke(new BasicStroke(3));
-                g.drawOval(x - 12, y - 12, 24, 24);
+                g.drawOval(x - 10, y - 28, 20, 20);
             }
+
             g.dispose();
         };
         mapViewer.setOverlayPainter(fencePainter);

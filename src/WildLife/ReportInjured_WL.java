@@ -1,7 +1,6 @@
 
 package WildLife;
 
-import Main.AboutUs;
 import Main.Home;
 import org.jxmapviewer.JXMapViewer;
 import org.jxmapviewer.OSMTileFactoryInfo;
@@ -30,6 +29,9 @@ public class ReportInjured_WL extends javax.swing.JFrame {
         initComponents();
         setupProfessionalUI();
         initMapViewer();
+
+        loadInjuredData(); // IMPORTANT
+
         this.setLocationRelativeTo(null);
         this.setExtendedState(JFrame.MAXIMIZED_BOTH);
     }
@@ -97,7 +99,6 @@ public class ReportInjured_WL extends javax.swing.JFrame {
                 GeoPosition pos = mapViewer.convertPointToGeoPosition(e.getPoint());
                 removeReportAt(pos);
             }
-
         });
 
         jPanel1.add(mapViewer, new AbsoluteConstraints(50, 150, 1100, 600));
@@ -135,53 +136,132 @@ public class ReportInjured_WL extends javax.swing.JFrame {
         try {
             injuredElephants.clear();
             alertFeed.setText("");
-            int crit = 0, gun = 0, limp = 0, dead = 0;
 
-            ResultSet rs = con.createStatement().executeQuery("SELECT * FROM injured_elephants");
-            while (rs.next()) {
-                GeoPosition pos = new GeoPosition(rs.getDouble("latitude"), rs.getDouble("longitude"));
-                String desc = rs.getString("description");
-                String sev = rs.getString("severity");
-                injuredElephants.put(pos, new String[]{desc, sev});
+            java.net.URL url = new java.net.URL("http://localhost:8081/api/injured-elephants/all");
+            java.net.HttpURLConnection conn =
+                    (java.net.HttpURLConnection) url.openConnection();
 
-                alertFeed.append("• [" + sev + "] " + desc + "\n");
-                if (sev.equals("Critical")) crit++;
-                else if (sev.equals("Gunshot Wound")) gun++;
-                else if (sev.equals("Limping")) limp++;
-                else if (sev.equals("Deceased")) dead++;
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Accept", "application/json");
+
+            if (conn.getResponseCode() == 200) {
+
+                com.fasterxml.jackson.databind.ObjectMapper mapper =
+                        new com.fasterxml.jackson.databind.ObjectMapper();
+
+                com.fasterxml.jackson.databind.JsonNode rootNode =
+                        mapper.readTree(conn.getInputStream());
+
+                for (com.fasterxml.jackson.databind.JsonNode node : rootNode) {
+
+                    double lat = node.get("latitude").asDouble();
+                    double lon = node.get("longitude").asDouble();
+
+                    String desc =
+                            node.has("description") &&
+                                    !node.get("description").isNull()
+                                    ? node.get("description").asText()
+                                    : "Unknown Location incident";
+
+                    String sev =
+                            node.has("severity") &&
+                                    !node.get("severity").isNull()
+                                    ? node.get("severity").asText()
+                                    : "Critical";
+
+                    GeoPosition pos = new GeoPosition(lat, lon);
+
+                    injuredElephants.put(pos, new String[]{desc, sev});
+
+                    alertFeed.append("• [" + sev + "] " + desc + "\n");
+                }
+
+                updateStats();
+                refreshMapOverlay();
+
+                mapViewer.repaint();
+
+                System.out.println("Injured elephant data loaded!");
+
+            } else {
+
+                System.out.println("Failed : " + conn.getResponseCode());
             }
 
-            statsArea.setText("--- STATUS COUNTS ---\n🚨 Critical: " + crit + "\n🔫 Gunshot: " + gun +
-                    "\n🐘 Limping: " + limp + "\n💀 Deceased: " + dead + "\n---------------------");
-            refreshMapOverlay();
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void refreshMapOverlay() {
+
         Painter<JXMapViewer> painter = (Graphics2D g, JXMapViewer map, int w, int h) -> {
+
             g = (Graphics2D) g.create();
-            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            g.setRenderingHint(
+                    RenderingHints.KEY_ANTIALIASING,
+                    RenderingHints.VALUE_ANTIALIAS_ON
+            );
+
             Rectangle rect = map.getViewportBounds();
+
             for (Map.Entry<GeoPosition, String[]> entry : injuredElephants.entrySet()) {
-                Point2D pt = map.getTileFactory().geoToPixel(entry.getKey(), map.getZoom());
+
+                Point2D pt =
+                        map.getTileFactory().geoToPixel(entry.getKey(), map.getZoom());
+
                 int x = (int) pt.getX() - rect.x;
                 int y = (int) pt.getY() - rect.y;
 
                 String sev = entry.getValue()[1];
-                if (sev.equals("Critical")) g.setColor(Color.YELLOW);
-                else if (sev.equals("Deceased")) g.setColor(Color.BLACK);
-                else if (sev.equals("Gunshot Wound")) g.setColor(Color.RED);
-                else if (sev.equals("Limping")) g.setColor(Color.ORANGE);
-                else if (sev.equals("Minor")) g.setColor(Color.GREEN);
-                else g.setColor(Color.YELLOW);
 
-                g.fillOval(x - 12, y - 12, 24, 24);
+                Color color;
+
+                if (sev.equals("Critical")) {
+                    color = Color.YELLOW;
+                }
+                else if (sev.equals("Deceased")) {
+                    color = Color.BLACK;
+                }
+                else if (sev.equals("Gunshot Wound")) {
+                    color = Color.RED;
+                }
+                else if (sev.equals("Limping")) {
+                    color = Color.ORANGE;
+                }
+                else if (sev.equals("Minor")) {
+                    color = Color.GREEN;
+                }
+                else {
+                    color = Color.YELLOW;
+                }
+
+                // OUTER GLOW
+                g.setColor(new Color(
+                        color.getRed(),
+                        color.getGreen(),
+                        color.getBlue(),
+                        90
+                ));
+
+                g.fillOval(x - 8, y - 8, 16, 16);
+
+                // MAIN CIRCLE
+                g.setColor(color);
+                g.fillOval(x - 10, y - 10, 20, 20);
+
+                // WHITE BORDER
                 g.setColor(Color.WHITE);
-                g.drawOval(x - 12, y - 12, 24, 24);
+                g.setStroke(new BasicStroke(1));
+                g.drawOval(x - 10, y - 10, 20, 20);
             }
+
             g.dispose();
         };
+
         mapViewer.setOverlayPainter(painter);
+
         mapViewer.repaint();
     }
 

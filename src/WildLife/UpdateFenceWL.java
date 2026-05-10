@@ -1,6 +1,6 @@
 package WildLife;
 
-import Main.AboutUs;
+//import Main.AboutUs;
 import org.jxmapviewer.JXMapViewer;
 import org.jxmapviewer.OSMTileFactoryInfo;
 import org.jxmapviewer.viewer.*;
@@ -94,8 +94,17 @@ public class UpdateFenceWL extends javax.swing.JFrame {
         mapViewer.setAddressLocation(new GeoPosition(7.8731, 80.7718));
         mapViewer.setZoom(10);
 
-        mapViewer.addMouseWheelListener(new org.jxmapviewer.input.ZoomMouseWheelListenerCenter(mapViewer));
-        mapViewer.addMouseMotionListener(new org.jxmapviewer.input.PanMouseInputListener(mapViewer));
+        // Zoom using mouse wheel
+        mapViewer.addMouseWheelListener(
+                new org.jxmapviewer.input.ZoomMouseWheelListenerCursor(mapViewer)
+        );
+
+        // Drag / move map with mouse
+        org.jxmapviewer.input.PanMouseInputListener panListener =
+                new org.jxmapviewer.input.PanMouseInputListener(mapViewer);
+
+        mapViewer.addMouseListener(panListener);
+        mapViewer.addMouseMotionListener(panListener);
 
         // HOVER
         mapViewer.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
@@ -246,20 +255,61 @@ public class UpdateFenceWL extends javax.swing.JFrame {
                 int x = (int) pt.getX() - rect.x;
                 int y = (int) pt.getY() - rect.y;
 
-                // 🔥 SCALE (adjust if needed)
                 int r = radius / 25;
 
-                // 🔴 FILLED AREA (WATAK)
-                g.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 80));
+                // ================= GOOGLE MAP STYLE FENCE MARKER =================
+
+                // ================= FENCE RADIUS AREA =================
+
+                g.setColor(new Color(
+                        color.getRed(),
+                        color.getGreen(),
+                        color.getBlue(),
+                        40
+                ));
+
                 g.fillOval(x - r, y - r, r * 2, r * 2);
 
-                // 🔴 BORDER
-                g.setColor(color);
+                g.setColor(new Color(
+                        color.getRed(),
+                        color.getGreen(),
+                        color.getBlue(),
+                        120
+                ));
+
                 g.setStroke(new BasicStroke(2));
                 g.drawOval(x - r, y - r, r * 2, r * 2);
-            }
 
-            // 🔴 SEARCH HIGHLIGHT (KEEP SAME)
+                // Marker shadow
+                g.setColor(new Color(0, 0, 0, 50));
+                g.fillOval(x - 8, y + 2, 16, 8);
+
+                // Pin body
+                g.setColor(color);
+                g.fillOval(x - 10, y - 28, 20, 20);
+
+                // Pin tail
+                Polygon pin = new Polygon();
+                pin.addPoint(x, y);
+                pin.addPoint(x - 6, y - 14);
+                pin.addPoint(x + 6, y - 14);
+                g.fillPolygon(pin);
+
+                // Small center circle
+                g.setColor(Color.white);
+                g.fillOval(x - 4, y - 22, 8, 8);
+
+                // Small border
+                g.setColor(Color.WHITE);
+                g.drawOval(x - 4, y - 22, 8, 8);
+
+                // Outer border
+                g.setColor(Color.BLACK);
+                g.setStroke(new BasicStroke(1));
+                g.drawOval(x - 10, y - 28, 20, 20);
+            };
+
+           /* // 🔴 SEARCH HIGHLIGHT (KEEP SAME)
             if (searchedLocation != null) {
                 Point2D pt = map.getTileFactory().geoToPixel(searchedLocation, map.getZoom());
                 int x = (int) pt.getX() - rect.x;
@@ -271,7 +321,7 @@ public class UpdateFenceWL extends javax.swing.JFrame {
                 g.setColor(Color.RED);
                 g.setStroke(new BasicStroke(3));
                 g.drawOval(x - 20, y - 20, 40, 40);
-            }
+            }*/
 
             g.dispose();
         };
@@ -285,8 +335,17 @@ public class UpdateFenceWL extends javax.swing.JFrame {
             if (((String) entry.getValue()[0]).toLowerCase().contains(query.toLowerCase())) {
 
                 searchedLocation = entry.getKey();
+
                 mapViewer.setAddressLocation(searchedLocation);
                 mapViewer.setZoom(5);
+
+                String name = (String) entry.getValue()[0];
+                String status = (String) entry.getValue()[1];
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "FOUND:\n\n" + name + "\nStatus: " + status
+                );
 
                 refreshMapOverlay();
                 return true;
