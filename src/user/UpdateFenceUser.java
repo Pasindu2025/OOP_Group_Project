@@ -14,6 +14,10 @@ import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
 import javax.swing.*;
+import java.net.URL;
+import java.net.HttpURLConnection;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
 public class UpdateFenceUser extends javax.swing.JFrame {
     private JXMapViewer mapViewer;
@@ -22,7 +26,7 @@ public class UpdateFenceUser extends javax.swing.JFrame {
     private JTextField searchField;
 
     // Map to store GPS position as Key, and [PlaceName, Status] as Value
-    private final Map<GeoPosition, String[]> activeFences = new HashMap<>();
+    private final Map<GeoPosition, Object[]> activeFences = new HashMap<>();
 
 
     public UpdateFenceUser() {
@@ -30,6 +34,13 @@ public class UpdateFenceUser extends javax.swing.JFrame {
         //connectToDatabase();
         setupCustomComponents(); // Initialize Search and Feed
         initMapViewer();
+        loadFencesFromAPI();
+
+        new javax.swing.Timer(
+                5000,
+                e -> loadFencesFromAPI()
+        ).start();
+
         //loadExistingAlerts();
         this.setLocationRelativeTo(null);
     }
@@ -52,6 +63,42 @@ public class UpdateFenceUser extends javax.swing.JFrame {
         JScrollPane scroll = new JScrollPane(alertFeed);
         scroll.setBorder(BorderFactory.createTitledBorder("Active Fence Status"));
         jPanel1.add(scroll, new AbsoluteConstraints(1100, 260, 350, 500));
+
+        searchField.addActionListener(e -> {
+
+            String query =
+                    searchField.getText().trim();
+
+            if(query.isEmpty()) return;
+
+            for(Map.Entry<GeoPosition,Object[]>
+                    entry :
+                    activeFences.entrySet()) {
+
+                String name =
+                        (String)entry.getValue()[0];
+
+                if(name.toLowerCase()
+                        .contains(
+                                query.toLowerCase())) {
+
+                    mapViewer.setAddressLocation(
+                            entry.getKey());
+
+                    mapViewer.setZoom(5);
+
+                    JOptionPane.showMessageDialog(
+                            this,
+                            "Found: " + name);
+
+                    return;
+                }
+            }
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Location not found!");
+        });
     }
 
     private void initMapViewer() {
@@ -226,6 +273,258 @@ public class UpdateFenceUser extends javax.swing.JFrame {
 
     private void logout_btnMouseExited(java.awt.event.MouseEvent evt) {
         logout_btn.setForeground(java.awt.Color.WHITE);
+    }
+
+    private void loadFencesFromAPI() {
+
+        try {
+
+            URL url = new URL("http://localhost:8081/api/fences");
+
+            HttpURLConnection conn =
+                    (HttpURLConnection) url.openConnection();
+
+            conn.setRequestMethod("GET");
+
+            BufferedReader reader =
+                    new BufferedReader(
+                            new InputStreamReader(
+                                    conn.getInputStream()));
+
+            StringBuilder response =
+                    new StringBuilder();
+
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+
+            reader.close();
+
+            String json = response.toString();
+
+            activeFences.clear();
+            alertFeed.setText("");
+
+            String[] objects =
+                    json.split("\\},\\{");
+
+            for (String obj : objects) {
+
+                obj = obj.replace("[", "")
+                        .replace("]", "")
+                        .replace("{", "")
+                        .replace("}", "");
+
+                String[] parts = obj.split(",");
+
+                double lat = 0;
+                double lon = 0;
+
+                String name = "";
+                String status = "";
+
+                for (String p : parts) {
+
+                    String[] kv = p.split(":");
+
+                    if (kv.length < 2) continue;
+
+                    String key =
+                            kv[0].replace("\"", "").trim();
+
+                    String value =
+                            kv[1].replace("\"", "").trim();
+
+                    switch (key) {
+
+                        case "latitude":
+                            lat = Double.parseDouble(value);
+                            break;
+
+                        case "longitude":
+                            lon = Double.parseDouble(value);
+                            break;
+
+                        case "placeName":
+                            name = value;
+                            break;
+
+                        case "status":
+                            status = value;
+                            break;
+                    }
+                }
+
+                GeoPosition pos =
+                        new GeoPosition(lat, lon);
+
+                int radius = 500;
+
+                activeFences.put(
+                        pos,
+                        new Object[]{
+                                name,
+                                status,
+                                radius
+                        });
+
+                alertFeed.append(
+                        "📍 " + name +
+                                " -> STATUS: " +
+                                status + "\n"
+                );
+            }
+
+            refreshMapOverlay();
+            mapViewer.repaint();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void refreshMapOverlay() {
+
+        Painter<JXMapViewer> fencePainter =
+                (Graphics2D g,
+                 JXMapViewer map,
+                 int w,
+                 int h) -> {
+
+                    g = (Graphics2D) g.create();
+
+                    g.setRenderingHint(
+                            RenderingHints.KEY_ANTIALIASING,
+                            RenderingHints.VALUE_ANTIALIAS_ON
+                    );
+
+                    Rectangle rect =
+                            map.getViewportBounds();
+
+                    for (Map.Entry<GeoPosition,Object[]>
+                            entry :
+                            activeFences.entrySet()) {
+
+                        Object[] data =
+                                entry.getValue();
+
+                        String status =
+                                (String)data[1];
+
+                        int radius =
+                                (int)data[2];
+
+                        Color color =
+                                getStatusColor(status);
+
+                        Point2D pt =
+                                map.getTileFactory()
+                                        .geoToPixel(
+                                                entry.getKey(),
+                                                map.getZoom());
+
+                        int x =
+                                (int)pt.getX()
+                                        - rect.x;
+
+                        int y =
+                                (int)pt.getY()
+                                        - rect.y;
+
+                        int r = radius / 25;
+
+// Radius Area
+                        g.setColor(new Color(
+                                color.getRed(),
+                                color.getGreen(),
+                                color.getBlue(),
+                                40
+                        ));
+
+                        g.fillOval(
+                                x - r,
+                                y - r,
+                                r * 2,
+                                r * 2
+                        );
+
+                        g.setColor(new Color(
+                                color.getRed(),
+                                color.getGreen(),
+                                color.getBlue(),
+                                120
+                        ));
+
+                        g.setStroke(new BasicStroke(2));
+
+                        g.drawOval(
+                                x - r,
+                                y - r,
+                                r * 2,
+                                r * 2
+                        );
+
+// Shadow
+                        g.setColor(new Color(0,0,0,50));
+                        g.fillOval(
+                                x - 8,
+                                y + 2,
+                                16,
+                                8
+                        );
+
+// Pin Head
+                        g.setColor(color);
+                        g.fillOval(
+                                x - 10,
+                                y - 28,
+                                20,
+                                20
+                        );
+
+// Pin Tail
+                        Polygon pin = new Polygon();
+                        pin.addPoint(x, y);
+                        pin.addPoint(x - 6, y - 14);
+                        pin.addPoint(x + 6, y - 14);
+
+                        g.fillPolygon(pin);
+
+// Center Dot
+                        g.setColor(Color.WHITE);
+                        g.fillOval(
+                                x - 4,
+                                y - 22,
+                                8,
+                                8
+                        );
+
+                        g.drawOval(
+                                x - 4,
+                                y - 22,
+                                8,
+                                8
+                        );
+
+// Border
+                        g.setColor(Color.BLACK);
+                        g.setStroke(new BasicStroke(1));
+
+                        g.drawOval(
+                                x - 10,
+                                y - 28,
+                                20,
+                                20
+                        );
+                    }
+
+                    g.dispose();
+                };
+
+        mapViewer.setOverlayPainter(
+                fencePainter);
     }
 
     /* ================= MAIN ================= */
