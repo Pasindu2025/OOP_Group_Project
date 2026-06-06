@@ -44,8 +44,8 @@ public class ReportElephantAgent extends javax.swing.JFrame {
         initComponents();
         setupModernLayout();
 
-        loadExistingPoints();
-        loadExistingAreas();
+        // 🔥 1. මුලින්ම Backend එකෙන් ඔක්කොම දත්ත කියවලා Feed එක හදනවා
+        refreshAllDataFromBackend();
 
         this.setLocationRelativeTo(null);
         this.setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -55,20 +55,16 @@ public class ReportElephantAgent extends javax.swing.JFrame {
         getContentPane().removeAll();
         getContentPane().setLayout(new BorderLayout());
 
-        // 1. Top Navigation Bar (පරණ Colors සහ Fonts එක්ක)
         setupTopNavigationBar();
 
-        // 2. Main Body
         JPanel bodyPanel = new JPanel(new BorderLayout());
         getContentPane().add(bodyPanel, BorderLayout.CENTER);
 
-        // 3. Right Sidebar
         JPanel rightSidebar = new JPanel(new BorderLayout(0, 15));
         rightSidebar.setPreferredSize(new Dimension(380, 0));
         rightSidebar.setBackground(new Color(245, 245, 248));
         rightSidebar.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        // 3.1 Controls Panel (BoxLayout පාවිච්චි කළා Button එක යටින් ගන්න)
         JPanel controlsPanel = new JPanel();
         controlsPanel.setLayout(new BoxLayout(controlsPanel, BoxLayout.Y_AXIS));
         controlsPanel.setOpaque(false);
@@ -91,15 +87,13 @@ public class ReportElephantAgent extends javax.swing.JFrame {
         radAreaMode.setFont(radFont); radAreaMode.setOpaque(false); radAreaMode.setCursor(new Cursor(Cursor.HAND_CURSOR));
         radEraseMode.setFont(radFont); radEraseMode.setOpaque(false); radEraseMode.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // Area Mode එකට යටින් එන්න ඕන Cancel Button එක
         btnClearDraw = new JButton("Cancel Current Drawing");
         btnClearDraw.setBackground(new Color(108, 117, 125));
         btnClearDraw.setForeground(Color.WHITE);
         btnClearDraw.setFocusPainted(false);
         btnClearDraw.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnClearDraw.setVisible(false); // මුලින්ම පේන්නෙ නෑ
+        btnClearDraw.setVisible(false);
 
-        // Button එක ටිකක් ඇතුලට වෙන්න ලස්සනට තියන්න Panel එකක්
         JPanel cancelPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 30, 0));
         cancelPanel.setOpaque(false);
         cancelPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -110,7 +104,6 @@ public class ReportElephantAgent extends javax.swing.JFrame {
             refreshMapOverlay();
         });
 
-        // Radio Buttons Click කරද්දී Button එක පේන එක පාලනය කිරීම
         radAreaMode.addActionListener(e -> btnClearDraw.setVisible(true));
         radPointMode.addActionListener(e -> btnClearDraw.setVisible(false));
         radEraseMode.addActionListener(e -> btnClearDraw.setVisible(false));
@@ -121,13 +114,12 @@ public class ReportElephantAgent extends javax.swing.JFrame {
         controlsPanel.add(Box.createVerticalStrut(10));
         controlsPanel.add(radAreaMode);
         controlsPanel.add(Box.createVerticalStrut(5));
-        controlsPanel.add(cancelPanel); // Area Mode එකට යටින් Button එක
+        controlsPanel.add(cancelPanel);
         controlsPanel.add(Box.createVerticalStrut(10));
         controlsPanel.add(radEraseMode);
 
         rightSidebar.add(controlsPanel, BorderLayout.NORTH);
 
-        // 3.2 Live Feed
         JPanel feedPanel = new JPanel(new BorderLayout(0, 10));
         feedPanel.setOpaque(false);
 
@@ -147,7 +139,6 @@ public class ReportElephantAgent extends javax.swing.JFrame {
 
         bodyPanel.add(rightSidebar, BorderLayout.EAST);
 
-        // 4. Map Setup
         initMapViewer();
         bodyPanel.add(mapViewer, BorderLayout.CENTER);
 
@@ -157,7 +148,7 @@ public class ReportElephantAgent extends javax.swing.JFrame {
 
     private void setupTopNavigationBar() {
         jPanel2 = new JPanel();
-        jPanel2.setBackground(new Color(0, 0, 0)); // පරණ කළු පාට
+        jPanel2.setBackground(new Color(0, 0, 0));
         jPanel2.setPreferredSize(new Dimension(1920, 90));
         jPanel2.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
@@ -169,7 +160,6 @@ public class ReportElephantAgent extends javax.swing.JFrame {
         jLabel5.setForeground(Color.WHITE);
         jPanel2.add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 10, 210, -1));
 
-        // පරණ Hover Colors සහ Poppins Font එක ආයෙත් දැම්මා
         dashboard_btn = createNavButton("DASHBOARD");
         dashboard_btn.addActionListener(evt -> { Dashboard db = new Dashboard(); db.setVisible(true); this.dispose(); });
         jPanel2.add(dashboard_btn, new org.netbeans.lib.awtextra.AbsoluteConstraints(980, 30, -1, -1));
@@ -184,7 +174,6 @@ public class ReportElephantAgent extends javax.swing.JFrame {
         getContentPane().add(jPanel2, BorderLayout.NORTH);
     }
 
-    // Nav Bar Buttons හදන එක ලේසි වෙන්න වෙනම Method එකක් ලිව්වා
     private JButton createNavButton(String text) {
         JButton btn = new JButton(text);
         btn.setBackground(new Color(0, 0, 0));
@@ -194,14 +183,9 @@ public class ReportElephantAgent extends javax.swing.JFrame {
         btn.setContentAreaFilled(false);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // Hover Effect එක (පරණ Color Code එක: 255,153,0)
         btn.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent evt) {
-                btn.setForeground(new Color(255, 153, 0));
-            }
-            public void mouseExited(MouseEvent evt) {
-                btn.setForeground(Color.WHITE);
-            }
+            public void mouseEntered(MouseEvent evt) { btn.setForeground(new Color(255, 153, 0)); }
+            public void mouseExited(MouseEvent evt) { btn.setForeground(Color.WHITE); }
         });
         return btn;
     }
@@ -376,6 +360,13 @@ public class ReportElephantAgent extends javax.swing.JFrame {
         mapViewer.setOverlayPainter(compound);
     }
 
+    // 🔥 2块ම එකට Refresh වෙන අලුත් Logic එක
+    private void refreshAllDataFromBackend() {
+        alertFeed.setText("--- LIVE LOG ---\n\n");
+        loadExistingPoints();
+        loadExistingAreas();
+    }
+
     private void savePointToBackend(GeoPosition pos) {
         String villageName = getNearestVillage(pos.getLatitude(), pos.getLongitude());
         try {
@@ -387,7 +378,7 @@ public class ReportElephantAgent extends javax.swing.JFrame {
             String json = String.format("{\"latitude\": %f, \"longitude\": %f, \"placeName\": \"%s\"}", pos.getLatitude(), pos.getLongitude(), villageName);
             conn.getOutputStream().write(json.getBytes("utf-8"));
             if (conn.getResponseCode() == 200 || conn.getResponseCode() == 201) {
-                loadExistingPoints();
+                refreshAllDataFromBackend(); // 🔥 Live update
             }
         } catch (Exception e) { e.printStackTrace(); }
     }
@@ -398,7 +389,7 @@ public class ReportElephantAgent extends javax.swing.JFrame {
             java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
             conn.setRequestMethod("DELETE");
             if (conn.getResponseCode() == 200) {
-                loadExistingPoints();
+                refreshAllDataFromBackend(); // 🔥 Live update
                 JOptionPane.showMessageDialog(this, "Elephant Spot Removed!");
             }
         } catch (Exception e) { e.printStackTrace(); }
@@ -407,7 +398,6 @@ public class ReportElephantAgent extends javax.swing.JFrame {
     private void loadExistingPoints() {
         try {
             activePoints.clear();
-            alertFeed.setText("--- LIVE LOG ---\n\n");
             java.net.URL url = new java.net.URL("http://localhost:8081/api/active-alerts/all");
             java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
@@ -435,16 +425,16 @@ public class ReportElephantAgent extends javax.swing.JFrame {
 
             StringBuilder coordsJson = new StringBuilder("[");
             for (int i = 0; i < points.size(); i++) {
-                coordsJson.append(String.format("{\"lat\": %f, \"lon\": %f}", points.get(i).getLatitude(), points.get(i).getLongitude()));
+                coordsJson.append(String.format("{\\\"lat\\\": %f, \\\"lon\\\": %f}", points.get(i).getLatitude(), points.get(i).getLongitude()));
                 if (i < points.size() - 1) coordsJson.append(",");
             }
             coordsJson.append("]");
 
-            String json = String.format("{\"areaName\": \"Danger Zone\", \"coordinates\": \"%s\"}", coordsJson.toString().replace("\"", "\\\""));
+            String json = String.format("{\"areaName\": \"Danger Zone\", \"coordinates\": \"%s\"}", coordsJson.toString());
             conn.getOutputStream().write(json.getBytes("utf-8"));
 
             if (conn.getResponseCode() == 200 || conn.getResponseCode() == 201) {
-                loadExistingAreas();
+                refreshAllDataFromBackend(); // 🔥 Live update
                 JOptionPane.showMessageDialog(this, "Danger Area Saved!");
             }
         } catch (Exception e) { e.printStackTrace(); }
@@ -456,7 +446,7 @@ public class ReportElephantAgent extends javax.swing.JFrame {
             java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
             conn.setRequestMethod("DELETE");
             if (conn.getResponseCode() == 200) {
-                loadExistingAreas();
+                refreshAllDataFromBackend(); // 🔥 Live update
                 JOptionPane.showMessageDialog(this, "Danger Area Removed!");
             }
         } catch (Exception e) { e.printStackTrace(); }
@@ -510,7 +500,7 @@ public class ReportElephantAgent extends javax.swing.JFrame {
 
     @SuppressWarnings("unchecked")
     private void initComponents() {
-        // මේක NetBeans වල Auto Generate වෙන නිසා හිස්ව තියන්නේ (Layout එක අපි Code එකෙන් හැදුවා)
+        // Layout hand-coded inside setupModernLayout
     }
 
     public static void main(String args[]) {

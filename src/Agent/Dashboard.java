@@ -1,37 +1,57 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
 package Agent;
 
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.RenderingHints;
+import java.awt.geom.Point2D;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.BoxLayout;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
+
+import org.jxmapviewer.JXMapViewer;
+import org.jxmapviewer.OSMTileFactoryInfo;
+import org.jxmapviewer.painter.Painter;
+import org.jxmapviewer.viewer.DefaultTileFactory;
+import org.jxmapviewer.viewer.GeoPosition;
+import org.jxmapviewer.viewer.TileFactoryInfo;
+
 import Main.Home;
 import changePassword.changePassword;
 
 /**
- *
  * @author G
  */
 public class Dashboard extends javax.swing.JFrame {
 
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Dashboard.class.getName());
 
-    /**
-     * Creates new form Dashboard
-     */
+    // Map Variables
+    private JXMapViewer mapViewer;
+    private List<GeoPosition> elephantSpots = new ArrayList<>();
+    private List<GeoPosition> fenceIssues = new ArrayList<>();
+    private List<GeoPosition> injuredSpots = new ArrayList<>();
+
     public Dashboard() {
         initComponents();
 
+        // 1. Live Map එක හදනවා
+        initMapViewer();
+
+        // 2. Map එකට Data Load කරනවා
+        loadMapDataFromDB();
+
+        // 3. Stats සහ Table එකට Backend එකෙන් Data ගන්නවා
+        loadDashboardDataFromBackend();
+
         this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         this.setLocationRelativeTo(null);
-
 
         // Settings popup menu
         JPopupMenu settingsMenu = new JPopupMenu();
@@ -46,37 +66,30 @@ public class Dashboard extends javax.swing.JFrame {
         settingbtn.setBorderPainted(false);
 
         settingbtn.addMouseListener(new java.awt.event.MouseAdapter() {
-
             @Override
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 settingbtn.setBackground(new Color(100, 100, 100));
                 settingbtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
                 settingbtn.setPreferredSize(new Dimension(42, 27));
-                settingbtn.revalidate(); // refresh layout
-
+                settingbtn.revalidate();
             }
 
             @Override
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 settingbtn.setBackground(new Color(70, 70, 70));
                 settingbtn.setPreferredSize(new Dimension(40, 30));
-                settingbtn.revalidate(); // refresh layout
-
+                settingbtn.revalidate();
             }
         });
 
         settingbtn.addActionListener(e -> {
-            settingsMenu.show(
-                    settingbtn,          // anchor
-                    0,                    // x position
-                    settingbtn.getHeight() // y position (below button)
-            );
+            settingsMenu.show(settingbtn, 0, settingbtn.getHeight());
         });
+
         miChangePassword.addActionListener((java.awt.event.ActionEvent evt) -> {
-            new changePassword().setVisible(true);  // open page
-            // optionally close current window:
-            // SwingUtilities.getWindowAncestor(settingsMenu).dispose();
+            new changePassword().setVisible(true);
         });
+
         miDeleteProfile.addActionListener(e -> {
             int confirm = JOptionPane.showConfirmDialog(
                     this,
@@ -84,57 +97,184 @@ public class Dashboard extends javax.swing.JFrame {
                     "Confirm Delete",
                     JOptionPane.YES_NO_OPTION
             );
-
             if (confirm == JOptionPane.YES_OPTION) {
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Profile deleted (frontend only)"
-                );
+                JOptionPane.showMessageDialog(this, "Profile deleted (frontend only)");
             }
         });
 
-
-
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
-        // This part handles the alternating (zebra) colors
+
+        // Table Zebra Striping
         AlertTable.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCellRenderer() {
             @Override
             public java.awt.Component getTableCellRendererComponent(javax.swing.JTable table, Object value,
                                                                     boolean isSelected, boolean hasFocus, int row, int column) {
-
                 java.awt.Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-
                 if (!isSelected) {
-                    // If the row number is even, use a darker gray. If odd, use a slightly lighter gray.
                     if (row % 2 == 0) {
-                        c.setBackground(new java.awt.Color(40, 40, 40)); // Darker row
+                        c.setBackground(new java.awt.Color(40, 40, 40));
                     } else {
-                        c.setBackground(new java.awt.Color(55, 55, 55)); // Lighter row
+                        c.setBackground(new java.awt.Color(55, 55, 55));
                     }
                 } else {
-                    // Color for when a row is clicked/selected
                     c.setBackground(table.getSelectionBackground());
                 }
-
-                c.setForeground(java.awt.Color.WHITE); // Keep all text white
+                c.setForeground(java.awt.Color.WHITE);
                 return c;
             }
         });
-
-
-
-
-// Set the Table Header color to match the dashboard
-//AlertTable.getTableHeader().setBackground(new java.awt.Color(40, 40, 40));
-//AlertTable.getTableHeader().setForeground(new java.awt.Color(40,40,40));
-
     }
 
-    /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
-     */
+    // ==========================================
+    // MAP CONFIGURATION & DATA BINDING
+    // ==========================================
+
+    private void initMapViewer() {
+        mapViewer = new JXMapViewer();
+        System.setProperty("http.agent", "GajaSafeApp/1.0");
+        TileFactoryInfo info = new OSMTileFactoryInfo("GajaSafe", "https://tile.openstreetmap.org");
+        mapViewer.setTileFactory(new DefaultTileFactory(info));
+        mapViewer.setAddressLocation(new GeoPosition(7.8731, 80.7718));
+        mapViewer.setZoom(9);
+
+        // Interaction listeners
+        org.jxmapviewer.input.PanMouseInputListener panListener = new org.jxmapviewer.input.PanMouseInputListener(mapViewer);
+        mapViewer.addMouseListener(panListener);
+        mapViewer.addMouseMotionListener(panListener);
+        mapViewer.addMouseWheelListener(new org.jxmapviewer.input.ZoomMouseWheelListenerCenter(mapViewer));
+
+        // 🔴 මේ කෑල්ල තමයි වැදගත්:
+        // jLabel5 (පරණ ඉමේජ් එක) විතරක් අයින් කරන්න.
+        panelmap.remove(jLabel5);
+
+        // පැනල් එකේ Layout එක BorderLayout නම්,
+        // Cards ටික තියෙන්නේ NORTH එකේ, ඒ නිසා Map එක CENTER එකට දාන්න.
+        panelmap.add(mapViewer, java.awt.BorderLayout.CENTER);
+
+        panelmap.revalidate();
+        panelmap.repaint();
+    }
+
+    private void loadMapDataFromDB() {
+        // දැනට Map Data ගන්න එක කෙලින්ම Database එකෙන් කරනවා.
+        // පස්සෙ වෙලාවක මේකත් Backend (Spring Boot) එකට ගෙනියන්න පුළුවන්.
+        try {
+            java.sql.Connection con = java.sql.DriverManager.getConnection("jdbc:mysql://localhost:3306/oop_project", "root", "");
+            java.sql.Statement stmt = con.createStatement();
+
+            // Active Elephants (රතු පාටින් අඳින්න)
+            elephantSpots.clear();
+            java.sql.ResultSet rs1 = stmt.executeQuery("SELECT latitude, longitude FROM active_alerts");
+            while (rs1.next()) {
+                elephantSpots.add(new GeoPosition(rs1.getDouble("latitude"), rs1.getDouble("longitude")));
+            }
+
+            // Broken Fences (කහ පාටින් අඳින්න)
+            fenceIssues.clear();
+            java.sql.ResultSet rs2 = stmt.executeQuery("SELECT latitude, longitude FROM fence WHERE status != 'OK'");
+            while (rs2.next()) {
+                fenceIssues.add(new GeoPosition(rs2.getDouble("latitude"), rs2.getDouble("longitude")));
+            }
+
+            // Injured Elephants (තැඹිලි පාටින් අඳින්න)
+            injuredSpots.clear();
+            java.sql.ResultSet rs3 = stmt.executeQuery("SELECT latitude, longitude FROM injured_elephants");
+            while (rs3.next()) {
+                injuredSpots.add(new GeoPosition(rs3.getDouble("latitude"), rs3.getDouble("longitude")));
+            }
+
+            con.close();
+            refreshMapOverlay();
+
+        } catch (Exception e) {
+            System.out.println("Error loading map coordinates: " + e.getMessage());
+        }
+    }
+
+    private void refreshMapOverlay() {
+        Painter<JXMapViewer> customPainter = (Graphics2D g, JXMapViewer map, int w, int h) -> {
+            g = (Graphics2D) g.create();
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            Rectangle rect = map.getViewportBounds();
+
+            // Draw Elephant Spots (🔴 Red)
+            g.setColor(new Color(255, 0, 0, 150));
+            for (GeoPosition pos : elephantSpots) {
+                Point2D pt = map.getTileFactory().geoToPixel(pos, map.getZoom());
+                g.fillOval((int) pt.getX() - rect.x - 8, (int) pt.getY() - rect.y - 8, 16, 16);
+            }
+
+            // Draw Fence Issues (🟡 Yellow)
+            g.setColor(new Color(255, 204, 0, 150));
+            for (GeoPosition pos : fenceIssues) {
+                Point2D pt = map.getTileFactory().geoToPixel(pos, map.getZoom());
+                g.fillOval((int) pt.getX() - rect.x - 8, (int) pt.getY() - rect.y - 8, 16, 16);
+            }
+
+            // Draw Injured Spots (🟠 Orange)
+            g.setColor(new Color(255, 153, 0, 150));
+            for (GeoPosition pos : injuredSpots) {
+                Point2D pt = map.getTileFactory().geoToPixel(pos, map.getZoom());
+                g.fillOval((int) pt.getX() - rect.x - 8, (int) pt.getY() - rect.y - 8, 16, 16);
+            }
+            g.dispose();
+        };
+        mapViewer.setOverlayPainter(customPainter);
+        mapViewer.repaint();
+    }
+
+    // ==========================================
+    // BACKEND DATA LOADING (Cards & Table)
+    // ==========================================
+
+    private void loadDashboardDataFromBackend() {
+        try {
+            java.net.URL url = new java.net.URL("http://localhost:8081/api/dashboard/summary");
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Accept", "application/json");
+
+            if (conn.getResponseCode() == 200) {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                com.fasterxml.jackson.databind.JsonNode rootNode = mapper.readTree(conn.getInputStream());
+
+                // Update Stats
+                if (rootNode.has("activeAlerts")) numred.setText(rootNode.get("activeAlerts").asText());
+                if (rootNode.has("dangerAreas")) numyellow.setText(rootNode.get("dangerAreas").asText());
+                if (rootNode.has("fenceIssues")) numred2.setText(rootNode.get("fenceIssues").asText());
+
+                if (rootNode.has("injuredElephants")) {
+                    String injuredCount = rootNode.get("injuredElephants").asText();
+                    numorange.setText(injuredCount);
+                    injuredNum.setText(injuredCount);
+                }
+
+                // Update Table
+                if (rootNode.has("recentTable")) {
+                    javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) AlertTable.getModel();
+                    model.setRowCount(0);
+
+                    com.fasterxml.jackson.databind.JsonNode tableData = rootNode.get("recentTable");
+                    for (com.fasterxml.jackson.databind.JsonNode row : tableData) {
+                        String loc = row.has("location") && !row.get("location").isNull() ? row.get("location").asText() : "Unknown";
+                        String type = row.has("type") && !row.get("type").isNull() ? row.get("type").asText() : "-";
+                        String status = row.has("status") && !row.get("status").isNull() ? row.get("status").asText() : "-";
+
+                        model.addRow(new Object[]{loc, type, status});
+                    }
+                }
+                System.out.println("Dashboard Data Loaded from Backend Successfully!");
+
+            } else {
+                System.out.println("Failed to load dashboard data. HTTP Code: " + conn.getResponseCode());
+            }
+
+        } catch (Exception e) {
+            System.out.println("Backend Connection Error: " + e.getMessage());
+            numred.setText("0"); numyellow.setText("0"); numorange.setText("0"); numred2.setText("0"); injuredNum.setText("0");
+        }
+    }
+
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">
     private void initComponents() {
@@ -582,7 +722,6 @@ public class Dashboard extends javax.swing.JFrame {
             boolean[] canEdit = new boolean [] {
                     false, false, false
             };
-
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
@@ -594,7 +733,6 @@ public class Dashboard extends javax.swing.JFrame {
         jScrollPane1.setViewportView(AlertTable);
 
         panelTable.add(jScrollPane1, java.awt.BorderLayout.CENTER);
-
         centerpanel.add(panelTable, java.awt.BorderLayout.PAGE_END);
 
         panelmap.setBackground(new java.awt.Color(50, 50, 50));
@@ -615,10 +753,10 @@ public class Dashboard extends javax.swing.JFrame {
         cardred.setPreferredSize(new java.awt.Dimension(150, 100));
         cardred.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
-                cardredMouseEntered(evt);
+                cardred.setBackground(new java.awt.Color(255, 20, 50));
             }
             public void mouseExited(java.awt.event.MouseEvent evt) {
-                cardredMouseExited(evt);
+                cardred.setBackground(new java.awt.Color(200, 60, 60));
             }
         });
         cardred.setLayout(new java.awt.BorderLayout());
@@ -631,7 +769,7 @@ public class Dashboard extends javax.swing.JFrame {
         numred.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
         numred.setForeground(new java.awt.Color(255, 255, 255));
         numred.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        numred.setText("12");
+        numred.setText("0");
         numred.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         cardred.add(numred, java.awt.BorderLayout.LINE_START);
 
@@ -642,10 +780,10 @@ public class Dashboard extends javax.swing.JFrame {
         cardyellow.setPreferredSize(new java.awt.Dimension(200, 0));
         cardyellow.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
-                cardyellowMouseEntered(evt);
+                cardyellow.setBackground(new java.awt.Color(255, 204, 102));
             }
             public void mouseExited(java.awt.event.MouseEvent evt) {
-                cardyellowMouseExited(evt);
+                cardyellow.setBackground(new java.awt.Color(220, 170, 60));
             }
         });
         cardyellow.setLayout(new java.awt.BorderLayout());
@@ -658,7 +796,7 @@ public class Dashboard extends javax.swing.JFrame {
         numyellow.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
         numyellow.setForeground(new java.awt.Color(255, 255, 255));
         numyellow.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        numyellow.setText("12");
+        numyellow.setText("0");
         numyellow.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         cardyellow.add(numyellow, java.awt.BorderLayout.LINE_START);
 
@@ -669,10 +807,10 @@ public class Dashboard extends javax.swing.JFrame {
         cardorange.setPreferredSize(new java.awt.Dimension(200, 0));
         cardorange.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
-                cardorangeMouseEntered(evt);
+                cardorange.setBackground(new java.awt.Color(255, 153, 51));
             }
             public void mouseExited(java.awt.event.MouseEvent evt) {
-                cardorangeMouseExited(evt);
+                cardorange.setBackground(new java.awt.Color(230, 130, 40));
             }
         });
         cardorange.setLayout(new java.awt.BorderLayout());
@@ -685,7 +823,7 @@ public class Dashboard extends javax.swing.JFrame {
         numorange.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
         numorange.setForeground(new java.awt.Color(255, 255, 255));
         numorange.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        numorange.setText("12");
+        numorange.setText("0");
         numorange.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         cardorange.add(numorange, java.awt.BorderLayout.LINE_START);
 
@@ -696,39 +834,31 @@ public class Dashboard extends javax.swing.JFrame {
         cardred2.setPreferredSize(new java.awt.Dimension(200, 0));
         cardred2.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
-                cardred2MouseEntered(evt);
+                cardred2.setBackground(new java.awt.Color(204, 0, 51));
             }
             public void mouseExited(java.awt.event.MouseEvent evt) {
-                cardred2MouseExited(evt);
+                cardred2.setBackground(new java.awt.Color(200, 60, 60));
             }
         });
         cardred2.setLayout(new java.awt.BorderLayout());
 
         titlered2.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         titlered2.setForeground(new java.awt.Color(255, 255, 255));
-        titlered2.setText("Electric Frence Breakers");
-        titlered2.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                titlered2MouseEntered(evt);
-            }
-        });
+        titlered2.setText("Electric Fence Breakers");
         cardred2.add(titlered2, java.awt.BorderLayout.PAGE_START);
 
         numred2.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
         numred2.setForeground(new java.awt.Color(255, 255, 255));
         numred2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        numred2.setText("12");
+        numred2.setText("0");
         numred2.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         cardred2.add(numred2, java.awt.BorderLayout.LINE_START);
 
         cards.add(cardred2);
 
         panelmap.add(cards, java.awt.BorderLayout.PAGE_START);
-
         centerpanel.add(panelmap, java.awt.BorderLayout.CENTER);
-
         centerbig.add(centerpanel, java.awt.BorderLayout.CENTER);
-
         center.add(centerbig, java.awt.BorderLayout.CENTER);
 
         getContentPane().add(center, java.awt.BorderLayout.CENTER);
@@ -736,56 +866,10 @@ public class Dashboard extends javax.swing.JFrame {
         pack();
     }// </editor-fold>
 
-    private void cardredMouseEntered(java.awt.event.MouseEvent evt) {
-        cardred.setBackground(new java.awt.Color(255, 20, 50));
-
-    }
-
-    private void cardredMouseExited(java.awt.event.MouseEvent evt) {
-        cardred.setBackground(new java.awt.Color(200, 60, 60));
-    }
-
-    private void cardyellowMouseEntered(java.awt.event.MouseEvent evt) {
-        cardyellow.setBackground(new java.awt.Color(255, 204, 102));
-    }
-
-    private void cardyellowMouseExited(java.awt.event.MouseEvent evt) {
-        cardyellow.setBackground(new java.awt.Color(220, 170, 60));
-    }
-
-    private void cardorangeMouseEntered(java.awt.event.MouseEvent evt) {
-        cardorange.setBackground(new java.awt.Color(255, 153,51));
-    }
-
-    private void cardorangeMouseExited(java.awt.event.MouseEvent evt) {
-        cardorange.setBackground(new java.awt.Color(230, 130,40));
-    }
-
-    private void titlered2MouseEntered(java.awt.event.MouseEvent evt) {
-
-    }
-
-    private void cardred2MouseEntered(java.awt.event.MouseEvent evt) {
-        cardred2.setBackground(new java.awt.Color(204, 0, 51));
-    }
-
-    private void cardred2MouseExited(java.awt.event.MouseEvent evt) {
-        cardred2.setBackground(new java.awt.Color(200, 60, 60));
-    }
-
-    private void settingbtnActionPerformed(java.awt.event.ActionEvent evt) {
-
-    }
-
-    private void callMouseExited(java.awt.event.MouseEvent evt) {
-        // This resets the color to Orange when the mouse leaves
-        call.setForeground(new java.awt.Color(255, 153, 0));
-    }
-
-    private void callMouseEntered(java.awt.event.MouseEvent evt) {
-        call.setForeground(java.awt.Color.WHITE);
-    }
-
+    // GUI Event Handlers
+    private void settingbtnActionPerformed(java.awt.event.ActionEvent evt) {}
+    private void callMouseExited(java.awt.event.MouseEvent evt) { call.setForeground(new java.awt.Color(255, 153, 0)); }
+    private void callMouseEntered(java.awt.event.MouseEvent evt) { call.setForeground(java.awt.Color.WHITE); }
     private void callMouseClicked(java.awt.event.MouseEvent evt) {
         javax.swing.JOptionPane.showMessageDialog(this,
                 "<html><center><font size='5' color='orange'><b>Emergency Wildlife Services</b></font><br>" +
@@ -795,133 +879,67 @@ public class Dashboard extends javax.swing.JFrame {
                 javax.swing.JOptionPane.INFORMATION_MESSAGE);
     }
 
-    private void alertsbtnMouseEntered(java.awt.event.MouseEvent evt) {
-        alertsbtn.setForeground(new java.awt.Color(255, 153, 0));
+    private void alertsbtnMouseEntered(java.awt.event.MouseEvent evt) { alertsbtn.setForeground(new java.awt.Color(255, 153, 0)); }
+    private void alertsbtnMouseExited(java.awt.event.MouseEvent evt) { alertsbtn.setForeground(java.awt.Color.WHITE); }
+    private void injurybtnMouseEntered(java.awt.event.MouseEvent evt) { injurybtn.setForeground(new java.awt.Color(255, 153, 0)); }
+    private void injurybtnMouseExited(java.awt.event.MouseEvent evt) { injurybtn.setForeground(java.awt.Color.WHITE); }
+    private void fencebtnMouseEntered(java.awt.event.MouseEvent evt) { fencebtn.setForeground(new java.awt.Color(255, 153, 0)); }
+    private void fencebtnMouseExited(java.awt.event.MouseEvent evt) { fencebtn.setForeground(java.awt.Color.WHITE); }
+    private void aibtnMouseEntered(java.awt.event.MouseEvent evt) { aibtn.setForeground(new java.awt.Color(255, 153, 0)); }
+    private void aibtnMouseExited(java.awt.event.MouseEvent evt) { aibtn.setForeground(java.awt.Color.WHITE); }
 
-    }
-
-    private void alertsbtnMouseExited(java.awt.event.MouseEvent evt) {
-        // This resets the color to Orange when the mouse leaves
-        alertsbtn.setForeground(java.awt.Color.WHITE);
-
-
-    }
-
-    private void injurybtnMouseEntered(java.awt.event.MouseEvent evt) {
-        injurybtn.setForeground(new java.awt.Color(255, 153, 0));
-
-    }
-
-    private void injurybtnMouseExited(java.awt.event.MouseEvent evt) {
-        injurybtn.setForeground(java.awt.Color.WHITE);
-    }
-
-    private void fencebtnMouseEntered(java.awt.event.MouseEvent evt) {
-        fencebtn.setForeground(new java.awt.Color(255, 153, 0));
-
-    }
-
-    private void fencebtnMouseExited(java.awt.event.MouseEvent evt) {
-        fencebtn.setForeground(java.awt.Color.WHITE);
-    }
-
-    private void aibtnMouseEntered(java.awt.event.MouseEvent evt) {
-        aibtn.setForeground(new java.awt.Color(255, 153, 0));
-    }
-
-    private void aibtnMouseExited(java.awt.event.MouseEvent evt) {
-        aibtn.setForeground(java.awt.Color.WHITE);
-    }
 
     private void settingbtnMouseEntered(java.awt.event.MouseEvent evt) {
-
-
+        // NetBeans auto-generated call - leave empty
     }
-
 
     private void settingbtnMouseExited(java.awt.event.MouseEvent evt) {
-
-
-
+        // NetBeans auto-generated call - leave empty
     }
+
+
+
+
 
     private void alertsbtnActionPerformed(java.awt.event.ActionEvent evt) {
         new ReportElephantAgent().setVisible(true);
         this.dispose();
     }
-
     private void injurybtnActionPerformed(java.awt.event.ActionEvent evt) {
         new ReportInjured_Agent().setVisible(true);
+        this.dispose();
+    }
+    private void fencebtnActionPerformed(java.awt.event.ActionEvent evt) {
+        new UpdateFenceAgent().setVisible(true);
         this.dispose();
     }
     private void liveDetectionBtnActionPerformed(java.awt.event.ActionEvent evt) {
         try {
             String pythonScriptPath = "C:\\Users\\Lenovo\\Desktop\\Elephant_Project\\app.py";
             String pythonPath = "python";
-
             ProcessBuilder pb = new ProcessBuilder(pythonPath, pythonScriptPath);
             pb.inheritIO();
-
             pb.start();
-
             JOptionPane.showMessageDialog(this, "Camera Starting...");
-
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
         }
     }
 
-    private void fencebtnActionPerformed(java.awt.event.ActionEvent evt) {
-        new UpdateFenceAgent().setVisible(true);
-        this.dispose();
-    }
-
-    private void homebtnMouseEntered(java.awt.event.MouseEvent evt) {
-        homebtn.setForeground(new java.awt.Color(255, 153, 0));
-    }
-
-    private void homebtnMouseExited(java.awt.event.MouseEvent evt) {
-        homebtn.setForeground(java.awt.Color.WHITE);
-    }
-
-    private void homebtnActionPerformed(java.awt.event.ActionEvent evt) {
-        // TODO add your handling code here:
-    }
-
-    private void dashbtnMouseEntered(java.awt.event.MouseEvent evt) {
-        dashbtn.setForeground(new java.awt.Color(255, 153, 0));
-    }
-
-    private void dashbtnMouseExited(java.awt.event.MouseEvent evt) {
-        dashbtn.setForeground(java.awt.Color.WHITE);
-    }
-
-    private void dashbtnActionPerformed(java.awt.event.ActionEvent evt) {
-        // TODO add your handling code here:
-    }
-
-    private void logoutbtnMouseEntered(java.awt.event.MouseEvent evt) {
-        logoutbtn.setForeground(new java.awt.Color(255, 153, 0));
-    }
-
-    private void logoutbtnMouseExited(java.awt.event.MouseEvent evt) {
-        logoutbtn.setForeground(java.awt.Color.WHITE);
-    }
-
+    private void homebtnMouseEntered(java.awt.event.MouseEvent evt) { homebtn.setForeground(new java.awt.Color(255, 153, 0)); }
+    private void homebtnMouseExited(java.awt.event.MouseEvent evt) { homebtn.setForeground(java.awt.Color.WHITE); }
+    private void homebtnActionPerformed(java.awt.event.ActionEvent evt) {}
+    private void dashbtnMouseEntered(java.awt.event.MouseEvent evt) { dashbtn.setForeground(new java.awt.Color(255, 153, 0)); }
+    private void dashbtnMouseExited(java.awt.event.MouseEvent evt) { dashbtn.setForeground(java.awt.Color.WHITE); }
+    private void dashbtnActionPerformed(java.awt.event.ActionEvent evt) {}
+    private void logoutbtnMouseEntered(java.awt.event.MouseEvent evt) { logoutbtn.setForeground(new java.awt.Color(255, 153, 0)); }
+    private void logoutbtnMouseExited(java.awt.event.MouseEvent evt) { logoutbtn.setForeground(java.awt.Color.WHITE); }
     private void logoutbtnActionPerformed(java.awt.event.ActionEvent evt) {
         new Home().setVisible(true);
         this.dispose();
     }
 
-    /**
-     * @param args the command line arguments
-     */
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
-         */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
@@ -932,9 +950,6 @@ public class Dashboard extends javax.swing.JFrame {
         } catch (ReflectiveOperationException | javax.swing.UnsupportedLookAndFeelException ex) {
             logger.log(java.util.logging.Level.SEVERE, null, ex);
         }
-        //</editor-fold>
-
-        /* Create and display the form */
         java.awt.EventQueue.invokeLater(() -> new Dashboard().setVisible(true));
     }
 
