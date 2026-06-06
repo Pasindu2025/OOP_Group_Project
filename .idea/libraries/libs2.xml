@@ -1,0 +1,19 @@
+<component name="libraryTable">
+  <library name="libs2">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/libs/jackson-databind-2.21.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libs/jackson-core-2.21.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libs/mysql-connector-j-8.0.33.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libs/jackson-annotations-2.21.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libs/json-20240303.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libs/flatlaf-3.5.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libs/AbsoluteLayout (1).jar!/" />
+      <root url="jar://$PROJECT_DIR$/libs/flatlaf-3.7.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libs/commons-logging-1.3.6.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libs/json-20251224.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libs/jxmapviewer2-2.6.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
