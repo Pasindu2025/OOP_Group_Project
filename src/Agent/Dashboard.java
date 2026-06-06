@@ -488,7 +488,7 @@ public class Dashboard extends javax.swing.JFrame {
 
         namelabel.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         namelabel.setForeground(new java.awt.Color(255, 255, 255));
-        namelabel.setText("Dehami");
+
         namelabel.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 5, 1, 1));
         namelabel.setHorizontalTextPosition(javax.swing.SwingConstants.LEFT);
         namelabel.setPreferredSize(new java.awt.Dimension(80, 16));
