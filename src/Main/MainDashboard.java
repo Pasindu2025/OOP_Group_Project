@@ -15,6 +15,10 @@ public class MainDashboard extends javax.swing.JFrame {
 
     public MainDashboard() {
         initComponents();
+        if (User.UserSession.loggedInUsername != null) {
+            jLabel3.setText("Welcome, " + User.UserSession.loggedInUsername + "...");
+        }
+
         loadDashboardAlerts();
         new javax.swing.Timer(5000, e -> loadDashboardAlerts()).start();
     }
