@@ -1,9 +1,12 @@
 package Main;
 
 import WildLife.*;
-import WildLife.ReportElephantWL;
-import WildLife.ReportInjured_WL;
-import WildLife.UpdateFenceWL;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.JOptionPane;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 
 public class MainDashboard extends javax.swing.JFrame {
@@ -12,20 +15,143 @@ public class MainDashboard extends javax.swing.JFrame {
 
     public MainDashboard() {
         initComponents();
+        if (User.UserSession.loggedInUsername != null) {
+            jLabel3.setText("Welcome, " + User.UserSession.loggedInUsername + "...");
+        }
+
+        loadDashboardAlerts();
+        new javax.swing.Timer(5000, e -> loadDashboardAlerts()).start();
     }
 
-    private static class main {
+    private void loadDashboardAlerts() {
 
-        public main() {
+        try {
+
+            DefaultTableModel model =
+                    (DefaultTableModel) Table1.getModel();
+
+            model.setRowCount(0);
+
+            ObjectMapper mapper = new ObjectMapper();
+
+            // =====================================================
+            // 1. ACTIVE ELEPHANT ALERTS
+            // =====================================================
+
+            URL elephantUrl =
+                    new URL("http://localhost:8081/api/active-alerts/all");
+
+            HttpURLConnection elephantConn =
+                    (HttpURLConnection) elephantUrl.openConnection();
+
+            elephantConn.setRequestMethod("GET");
+
+            if (elephantConn.getResponseCode() == 200) {
+
+                JsonNode root =
+                        mapper.readTree(elephantConn.getInputStream());
+
+                for (JsonNode node : root) {
+
+                    String place =
+                            node.has("placeName")
+                                    ? node.get("placeName").asText()
+                                    : "Unknown";
+
+                    model.addRow(new Object[] {
+                            "Elephant Alert",
+                            place,
+                            "ACTIVE"
+                    });
+                }
+            }
+
+            // =====================================================
+            // 2. INJURED ELEPHANTS
+            // =====================================================
+
+            URL injuredUrl =
+                    new URL("http://localhost:8081/api/injured-elephants/all");
+
+            HttpURLConnection injuredConn =
+                    (HttpURLConnection) injuredUrl.openConnection();
+
+            injuredConn.setRequestMethod("GET");
+
+            if (injuredConn.getResponseCode() == 200) {
+
+                JsonNode root =
+                        mapper.readTree(injuredConn.getInputStream());
+
+                for (JsonNode node : root) {
+
+                    String desc =
+                            node.has("description") &&
+                                    !node.get("description").isNull()
+                                    ? node.get("description").asText()
+                                    : "Unknown Location";
+
+                    String severity =
+                            node.has("severity") &&
+                                    !node.get("severity").isNull()
+                                    ? node.get("severity").asText()
+                                    : "Critical";
+
+                    model.addRow(new Object[] {
+                            "Injured Elephant",
+                            desc,
+                            severity
+                    });
+                }
+            }
+
+            // =====================================================
+            // 3. ELECTRIC FENCE ALERTS
+            // =====================================================
+
+            URL fenceUrl =
+                    new URL("http://localhost:8081/api/fences");
+
+            HttpURLConnection fenceConn =
+                    (HttpURLConnection) fenceUrl.openConnection();
+
+            fenceConn.setRequestMethod("GET");
+
+            if (fenceConn.getResponseCode() == 200) {
+
+                JsonNode root =
+                        mapper.readTree(fenceConn.getInputStream());
+
+                for (JsonNode node : root) {
+
+                    String location =
+                            node.has("placeName")
+                                    ? node.get("placeName").asText()
+                                    : "Unknown Fence";
+
+                    String status =
+                            node.has("status")
+                                    ? node.get("status").asText()
+                                    : "Unknown";
+
+                    model.addRow(new Object[] {
+                            "Electric Fence",
+                            location,
+                            status
+                    });
+                }
+            }
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Failed to load dashboard alerts!"
+            );
         }
     }
-
-    public class Main {
-        public static void main(String[] args) {
-            //   new Login().setVisible(true);
-        }
-    }
-
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">
@@ -381,8 +507,8 @@ public class MainDashboard extends javax.swing.JFrame {
     }
 
     private void elephantReportBtnActionPerformed(java.awt.event.ActionEvent evt) {
-        ReportElephantWL RE = new ReportElephantWL();
-        RE.setVisible(true);
+        ReportElephantWL re = new ReportElephantWL();
+        re.setVisible(true);
         this.dispose();
     }
 

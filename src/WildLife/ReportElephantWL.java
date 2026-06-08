@@ -1,7 +1,6 @@
 
 package WildLife;
 
-import Main.AboutUs;
 import Main.Home;
 import org.jxmapviewer.JXMapViewer;
 import org.jxmapviewer.OSMTileFactoryInfo;
@@ -13,14 +12,252 @@ import java.util.HashSet;
 import java.util.Set;
 import javax.swing.*;
 import Main.MainDashboard;
+import org.jxmapviewer.painter.CompoundPainter;
+import org.jxmapviewer.painter.Painter;
+import java.awt.geom.Point2D;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ReportElephantWL extends javax.swing.JFrame {
 
     private JXMapViewer mapViewer;
     private JComboBox<String> comboProvince, comboDistrict, comboVillage;
     private Connection con;
-    private Set<GeoPosition> activeZones = new HashSet<>();
+   // private Set<GeoPosition> activeZones = new HashSet<>();
     private JTextArea alertFeed;
+    private Set<GeoPosition> activePoints = new HashSet<>();
+    private List<DangerZone> savedAreas = new ArrayList<>();
+
+    class DangerZone {
+        Long id;
+        List<GeoPosition> points;
+
+        public DangerZone(Long id, List<GeoPosition> points) {
+            this.id = id;
+            this.points = points;
+        }
+    }
+
+    private void loadExistingPoints() {
+        try {
+            activePoints.clear();
+            alertFeed.setText("--- LIVE LOG ---\n\n");
+
+            java.net.URL url = new java.net.URL("http://localhost:8081/api/active-alerts/all");
+            java.net.HttpURLConnection conn =
+                    (java.net.HttpURLConnection) url.openConnection();
+
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Accept", "application/json");
+
+            if (conn.getResponseCode() == 200) {
+
+                com.fasterxml.jackson.databind.JsonNode root =
+                        new com.fasterxml.jackson.databind.ObjectMapper()
+                                .readTree(conn.getInputStream());
+
+                for (com.fasterxml.jackson.databind.JsonNode node : root) {
+
+                    GeoPosition pos = new GeoPosition(
+                            node.get("latitude").asDouble(),
+                            node.get("longitude").asDouble()
+                    );
+
+                    activePoints.add(pos);
+
+                    String name = node.has("placeName")
+                            ? node.get("placeName").asText()
+                            : "Unknown";
+
+                    alertFeed.append("🔴 Elephant : " + name + "\n");
+                }
+
+                refreshMapOverlay();
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadExistingAreas() {
+
+        try {
+
+            savedAreas.clear();
+
+            java.net.URL url =
+                    new java.net.URL("http://localhost:8081/api/danger-areas/all");
+
+            java.net.HttpURLConnection conn =
+                    (java.net.HttpURLConnection) url.openConnection();
+
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Accept", "application/json");
+
+            if (conn.getResponseCode() == 200) {
+
+                com.fasterxml.jackson.databind.JsonNode root =
+                        new com.fasterxml.jackson.databind.ObjectMapper()
+                                .readTree(conn.getInputStream());
+
+                int count = 1;
+
+                for (com.fasterxml.jackson.databind.JsonNode node : root) {
+
+                    if (node.has("coordinates")) {
+
+                        Long id = node.get("id").asLong();
+
+                        String coordsString =
+                                node.get("coordinates").asText();
+
+                        com.fasterxml.jackson.databind.JsonNode pointsArray =
+                                new com.fasterxml.jackson.databind.ObjectMapper()
+                                        .readTree(coordsString);
+
+                        List<GeoPosition> area = new ArrayList<>();
+
+                        for (com.fasterxml.jackson.databind.JsonNode ptNode : pointsArray) {
+
+                            area.add(new GeoPosition(
+                                    ptNode.get("lat").asDouble(),
+                                    ptNode.get("lon").asDouble()
+                            ));
+                        }
+
+                        savedAreas.add(new DangerZone(id, area));
+
+                        alertFeed.append("🔲 Danger Zone "
+                                + count + " Loaded\n");
+
+                        count++;
+                    }
+                }
+
+                refreshMapOverlay();
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void refreshMapOverlay() {
+
+        Set<Waypoint> waypoints = new HashSet<>();
+
+        for (GeoPosition pos : activePoints) {
+            waypoints.add(new DefaultWaypoint(pos));
+        }
+
+        WaypointPainter<Waypoint> wpPainter =
+                new WaypointPainter<>();
+
+        wpPainter.setWaypoints(waypoints);
+
+        Painter<JXMapViewer> circlePainter =
+                (Graphics2D g, JXMapViewer map, int w, int h) -> {
+
+                    g = (Graphics2D) g.create();
+
+                    g.setRenderingHint(
+                            RenderingHints.KEY_ANTIALIASING,
+                            RenderingHints.VALUE_ANTIALIAS_ON
+                    );
+
+                    Rectangle rect = map.getViewportBounds();
+
+                    for (GeoPosition pos : activePoints) {
+
+                        Point2D centerPt =
+                                map.getTileFactory()
+                                        .geoToPixel(pos, map.getZoom());
+
+                        double offsetInDegrees = 100.0 / 111320.0;
+
+                        GeoPosition edgePos =
+                                new GeoPosition(
+                                        pos.getLatitude() + offsetInDegrees,
+                                        pos.getLongitude()
+                                );
+
+                        Point2D edgePt =
+                                map.getTileFactory()
+                                        .geoToPixel(edgePos, map.getZoom());
+
+                        int r = (int) Math.max(
+                                8,
+                                Math.abs(centerPt.getY() - edgePt.getY())
+                        );
+
+                        int x = (int) centerPt.getX() - rect.x;
+                        int y = (int) centerPt.getY() - rect.y;
+
+                        g.setColor(new Color(255, 0, 0, 100));
+                        g.fillOval(x - r, y - r, r * 2, r * 2);
+
+                        g.setColor(Color.RED);
+                        g.drawOval(x - r, y - r, r * 2, r * 2);
+                    }
+
+                    g.dispose();
+                };
+
+        Painter<JXMapViewer> polygonPainter =
+                (Graphics2D g, JXMapViewer map, int w, int h) -> {
+
+                    g = (Graphics2D) g.create();
+
+                    g.setRenderingHint(
+                            RenderingHints.KEY_ANTIALIASING,
+                            RenderingHints.VALUE_ANTIALIAS_ON
+                    );
+
+                    Rectangle rect = map.getViewportBounds();
+
+                    for (DangerZone zone : savedAreas) {
+
+                        Polygon p = new Polygon();
+
+                        for (GeoPosition pos : zone.points) {
+
+                            Point2D pt =
+                                    map.getTileFactory()
+                                            .geoToPixel(pos, map.getZoom());
+
+                            p.addPoint(
+                                    (int) pt.getX() - rect.x,
+                                    (int) pt.getY() - rect.y
+                            );
+                        }
+
+                        g.setColor(new Color(255, 165, 0, 80));
+                        g.fillPolygon(p);
+
+                        g.setColor(Color.ORANGE);
+
+                        g.setStroke(new BasicStroke(
+                                2.0f,
+                                BasicStroke.CAP_ROUND,
+                                BasicStroke.JOIN_ROUND
+                        ));
+
+                        g.drawPolygon(p);
+                    }
+
+                    g.dispose();
+                };
+
+        CompoundPainter<JXMapViewer> compound =
+                new CompoundPainter<>(
+                        circlePainter,
+                        polygonPainter,
+                        wpPainter
+                );
+
+        mapViewer.setOverlayPainter(compound);
+    }
     /**
      * Creates new form ReportElephantWL
      */
@@ -29,16 +266,27 @@ public class ReportElephantWL extends javax.swing.JFrame {
         connectToDatabase();
         setupControls();
         initMapViewer();
+        loadExistingPoints();
+        loadExistingAreas();
         this.setLocationRelativeTo(null);
         this.setExtendedState(JFrame.MAXIMIZED_BOTH);
     }
 
     private void connectToDatabase() {
         try {
+
             Class.forName("com.mysql.cj.jdbc.Driver");
-            con = DriverManager.getConnection("jdbc:mysql://localhost:3307/elephantdb", "root", "");
+
+            con = DriverManager.getConnection(
+                    "jdbc:mysql://localhost:3306/oop_project",
+                    "root",
+                    ""
+            );
+
+            System.out.println("Database Connected!");
+
         } catch (Exception e) {
-            System.err.println("Database Error: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -60,7 +308,7 @@ public class ReportElephantWL extends javax.swing.JFrame {
         mapViewer.addMouseMotionListener(new org.jxmapviewer.input.PanMouseInputListener(mapViewer));
         jPanel1.add(mapViewer, new AbsoluteConstraints(40, 120, 1050, 600));
 
-
+        refreshMapOverlay();
     }
 
 

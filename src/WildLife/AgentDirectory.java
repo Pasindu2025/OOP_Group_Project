@@ -6,13 +6,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JTable;
+import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
@@ -25,6 +19,38 @@ public class AgentDirectory extends javax.swing.JFrame {
 
     private static final java.util.logging.Logger logger
             = java.util.logging.Logger.getLogger(AgentDirectory.class.getName());
+
+
+    public void fetchAgentsFromAPI() {
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Void doInBackground() throws Exception {
+                try {
+                    java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
+                    java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
+                            .uri(java.net.URI.create("http://localhost:8081/api/agents"))
+                            .GET().build();
+                    java.net.http.HttpResponse<String> response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofString());
+
+                    if (response.statusCode() == 200) {
+                        masterData.clear();
+                        org.json.JSONArray agents = new org.json.JSONArray(response.body());
+                        for (int i = 0; i < agents.length(); i++) {
+                            org.json.JSONObject obj = agents.getJSONObject(i);
+                            masterData.add(new Object[]{
+                                    obj.get("id"), obj.getString("fullName"), obj.getString("contactNumber"),
+                                    obj.getString("email"), obj.getString("address"), obj.getString("assignedArea"), "Action"
+                            });
+                        }
+                    }
+                } catch (Exception e) { System.err.println("API Error: " + e.getMessage()); }
+                return null;
+            }
+            @Override
+            protected void done() { renderPage(); }
+        };
+        worker.execute();
+    }
 
     // ── Pagination state ──
     private int    currentPage = 1;
@@ -72,22 +98,8 @@ public class AgentDirectory extends javax.swing.JFrame {
         table.getColumn("Action").setCellRenderer(new ButtonRenderer());
         table.getColumn("Action").setCellEditor(new ButtonEditor(new JCheckBox(), table));
 
-        // ── Master data (replace these with DB query when ready) ──
-        masterData.add(new Object[]{1,  "Kasun Perera",       "0712345678", "kasun@gmail.com",    "Colombo 05",       "Colombo",     "Action"});
-        masterData.add(new Object[]{2,  "Nimali Silva",       "0778901234", "nimali@gmail.com",   "Kandy 10",         "Kandy",       "Action"});
-        masterData.add(new Object[]{3,  "Ravindu Jay",        "0761234567", "ravindu@gmail.com",  "Galle 03",         "Galle",       "Action"});
-        masterData.add(new Object[]{4,  "Chamara Bandara",    "0712223334", "chamara@gmail.com",  "Matara 01",        "Matara",      "Action"});
-        masterData.add(new Object[]{5,  "Dilini Rathnayake",  "0769998887", "dilini@gmail.com",   "Kurunegala 02",    "Kurunegala",  "Action"});
-        masterData.add(new Object[]{6,  "Saman Fernando",     "0714445556", "saman@gmail.com",    "Negombo 05",       "Negombo",     "Action"});
-        masterData.add(new Object[]{7,  "Priya Wickrama",     "0776667778", "priya@gmail.com",    "Jaffna 01",        "Jaffna",      "Action"});
-        masterData.add(new Object[]{8,  "Ruwan Jayasena",     "0762223334", "ruwan@gmail.com",    "Anuradhapura 03",  "Anuradhapura","Action"});
-        masterData.add(new Object[]{9,  "Amali Perera",       "0718889990", "amali@gmail.com",    "Ratnapura 02",     "Ratnapura",   "Action"});
-        masterData.add(new Object[]{10, "Nuwan Dissanayake",  "0779990001", "nuwan@gmail.com",    "Badulla 04",       "Badulla",     "Action"});
-        masterData.add(new Object[]{11, "Iresha Kumari",      "0763334445", "iresha@gmail.com",   "Trincomalee 01",   "Trincomalee", "Action"});
-        masterData.add(new Object[]{12, "Tharaka Silva",      "0711112223", "tharaka@gmail.com",  "Hambantota 02",    "Hambantota",  "Action"});
-        masterData.add(new Object[]{13, "Malsha Rajapaksa",   "0774445556", "malsha@gmail.com",   "Polonnaruwa 03",   "Polonnaruwa", "Action"});
-        masterData.add(new Object[]{14, "Bhanu Herath",       "0765556667", "bhanu@gmail.com",    "Nuwara Eliya 01",  "Nuwara Eliya","Action"});
-        masterData.add(new Object[]{15, "Suneth Gunawardena", "0716667778", "suneth@gmail.com",   "Kegalle 02",       "Kegalle",     "Action"});
+
+        fetchAgentsFromAPI();
 
         // ── Footer label ──
         footerLabel = new JLabel("Showing 0 to 0 of 0 entries");
@@ -362,6 +374,7 @@ public class AgentDirectory extends javax.swing.JFrame {
         headerpanel.add(titlepanel, java.awt.BorderLayout.CENTER);
         getContentPane().add(headerpanel, java.awt.BorderLayout.NORTH);
 
+
         // ── Centre panel ──
         centerpanel.setBackground(new java.awt.Color(0, 67, 67));
         centerpanel.setPreferredSize(new java.awt.Dimension(100, 75));
@@ -565,14 +578,57 @@ class ButtonEditor extends javax.swing.DefaultCellEditor {
         });
         deleteBtn.addActionListener(e -> {
             fireEditingStopped();
-            String name = String.valueOf(table.getValueAt(currentRow, 1));
+            int row = currentRow;
+            String id = String.valueOf(table.getValueAt(row, 0));
+            String name = String.valueOf(table.getValueAt(row, 1));
+
             int choice = JOptionPane.showConfirmDialog(table,
-                    "Delete agent \"" + name + "\"? This cannot be undone.",
+                    "Delete agent \"" + name + "\"?",
                     "Confirm Delete", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if (choice == JOptionPane.YES_OPTION) {
+                deleteAgentFromDatabase(id, row);
+
                 ((DefaultTableModel) table.getModel()).removeRow(currentRow);
             }
+
         });
+
+    }
+    private void deleteAgentFromDatabase(String id, int row) {
+        SwingWorker<Boolean, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Boolean doInBackground() throws Exception {
+                try {
+                    java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
+                    java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
+                            .uri(java.net.URI.create("http://localhost:8081/api/agents/" + id))
+                            .DELETE() // DELETE Method
+                            .build();
+
+                    java.net.http.HttpResponse<String> response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofString());
+                    return response.statusCode() == 200 || response.statusCode() == 204;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return false;
+                }
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    if (get()) {
+                        // if deleted in databse then deleted from ui table
+                        ((DefaultTableModel) table.getModel()).removeRow(row);
+                        JOptionPane.showMessageDialog(table, "Agent Deleted Successfully!");
+                    } else {
+                        JOptionPane.showMessageDialog(table, "Failed to delete agent from database!", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        };
+        worker.execute();
     }
 
     @Override
@@ -621,8 +677,79 @@ class ButtonEditor extends javax.swing.DefaultCellEditor {
             m.setValueAt(tfEmail.getText().trim(),   row, 3);
             m.setValueAt(tfAddress.getText().trim(), row, 4);
             m.setValueAt(tfArea.getText().trim(),    row, 5);
+
         }
+        if (result == JOptionPane.OK_OPTION) {
+            // take the new details to update
+            String id = String.valueOf(m.getValueAt(row, 0));
+            String name = tfName.getText().trim();
+            String contact = tfContact.getText().trim();
+            String email = tfEmail.getText().trim();
+            String address = tfAddress.getText().trim();
+            String area = tfArea.getText().trim();
+
+
+            updateAgentInDatabase(id, name, contact, email, address, area, row);
+        }
+
+
     }
+    private void updateAgentInDatabase(String id, String name, String contact, String email, String address, String area, int row) {
+        SwingWorker<Boolean, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Boolean doInBackground() throws Exception {
+                try {
+
+                    org.json.JSONObject updatedData = new org.json.JSONObject();
+                    updatedData.put("fullName", name);
+                    updatedData.put("contactNumber", contact);
+                    updatedData.put("email", email);
+                    updatedData.put("address", address);
+                    updatedData.put("assignedArea", area);
+                    updatedData.put("employeeId", "EMP123");
+
+                    // Make the HTTP Request for put
+                    java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
+                    java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
+                            .uri(java.net.URI.create("http://localhost:8081/api/agents/" + id))
+                            .header("Content-Type", "application/json")
+                            .PUT(java.net.http.HttpRequest.BodyPublishers.ofString(updatedData.toString()))
+                            .build();
+
+                    java.net.http.HttpResponse<String> response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofString());
+                    System.out.println("Status Code: " + response.statusCode());
+                    System.out.println("Response Body: " + response.body());
+                    return response.statusCode() == 200 || response.statusCode() == 204;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return false;
+                }
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    if (get()) {
+                        // if successful then update the table
+                        DefaultTableModel m = (DefaultTableModel) table.getModel();
+                        m.setValueAt(name, row, 1);
+                        m.setValueAt(contact, row, 2);
+                        m.setValueAt(email, row, 3);
+                        m.setValueAt(address, row, 4);
+                        m.setValueAt(area, row, 5);
+                        JOptionPane.showMessageDialog(table, "Agent Updated Successfully!");
+                    } else {
+                        JOptionPane.showMessageDialog(table, "Failed to update database!", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        };
+        worker.execute();
+    }
+
+
 
     private void styleBtn(JButton b, Color bg) {
         b.setPreferredSize(new Dimension(68, 28));
@@ -635,4 +762,7 @@ class ButtonEditor extends javax.swing.DefaultCellEditor {
 
     @Override
     public Object getCellEditorValue() { return ""; }
+
+
+
 }

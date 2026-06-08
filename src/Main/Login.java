@@ -245,6 +245,9 @@ public class Login extends javax.swing.JFrame {
 
 
                             if (response.equals("WILDLIFE_SUCCESS")) {
+
+                                User.UserSession.loggedInUsername = usernamefeild.getText().trim();
+
                                 javax.swing.JOptionPane.showMessageDialog(this, "Welcome Wildlife Officer!");
                                 Main.MainDashboard wildlifeDash = new Main.MainDashboard();
                                 wildlifeDash.setVisible(true);
@@ -262,7 +265,12 @@ public class Login extends javax.swing.JFrame {
 
 
                             else if (response.equals("USER_SUCCESS")) {
+
+                                User.UserSession.loggedInUsername = usernamefeild.getText().trim();
+
                                 javax.swing.JOptionPane.showMessageDialog(this, "Login Successful!");
+
+
                                 User.Main userMain = new User.Main();
                                 userMain.setVisible(true);
                                 this.dispose();

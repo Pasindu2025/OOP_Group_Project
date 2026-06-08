@@ -27,6 +27,17 @@ public class Main extends javax.swing.JFrame {
         initComponents();
         this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         this.setLocationRelativeTo(null);
+        if (User.UserSession.loggedInUsername != null && !User.UserSession.loggedInUsername.isEmpty()) {
+            welcometext.setText("Welcome, " + User.UserSession.loggedInUsername);
+        } else {
+            welcometext.setText("Welcome, Guest");
+        }
+
+        welcometext.setForeground(new java.awt.Color(255, 255, 255));
+        // --------------------------------
+
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
+        this.setLocationRelativeTo(null);
     }
     private void showSafetyGuidelines() {
         String guidelines = """
@@ -273,11 +284,6 @@ public class Main extends javax.swing.JFrame {
         welcomePanel.setPreferredSize(new java.awt.Dimension(0, 70));
         welcomePanel.setLayout(new javax.swing.BoxLayout(welcomePanel, javax.swing.BoxLayout.Y_AXIS));
 
-        welcometext.setFont(new java.awt.Font("Segoe UI", 1, 28)); // NOI18N
-        welcometext.setForeground(new java.awt.Color(255, 255, 255));
-        welcometext.setText("Welcome, Dehami");
-        welcometext.setAlignmentX(0.5F);
-        welcomePanel.add(welcometext);
 
         jLabel1.setBackground(new java.awt.Color(255, 255, 255));
         jLabel1.setFont(new java.awt.Font("Segoe UI Semibold", 2, 18)); // NOI18N
