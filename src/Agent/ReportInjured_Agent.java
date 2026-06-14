@@ -182,22 +182,29 @@ public class ReportInjured_Agent extends javax.swing.JFrame {
         }
 
         if (toRemove != null) {
-            if (JOptionPane.showConfirmDialog(this, "Delete this report?", "Remove", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+            if (JOptionPane.showConfirmDialog(this, "Delete this report from Map and Database?", "Remove Report", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
 
+                // 1. 🛑 ඩේටාබේස් එකෙන් අයින් කරන්න බැක්එන්ඩ් එකට කියනවා
+                deleteDataFromBackend(toRemove.getLatitude(), toRemove.getLongitude());
+
+                // 2. Local Map එකෙන් අයින් කරනවා
                 injuredElephants.remove(toRemove);
 
-                // rebuild sidebar
+                // Rebuild sidebar list
                 alertFeed.setText("");
                 for (String[] data : injuredElephants.values()) {
                     alertFeed.append("• [" + data[1] + "] " + data[0] + "\n");
                 }
 
+                // Refresh UI components
                 updateStats();
                 refreshMapOverlay();
                 mapViewer.repaint();
             }
         }
     }
+
+
 
     private void loadInjuredData() {
         try {
@@ -294,6 +301,26 @@ public class ReportInjured_Agent extends javax.swing.JFrame {
             return village;
         } catch (Exception e) {
             return "Unknown Location"; // API එක වැඩ නැත්නම් default එකක්
+        }
+    }
+
+    private void deleteDataFromBackend(double lat, double lon) {
+        try {
+            // 🔗 Backend URL එක (Coordinates query params විදියට යවනවා)
+            String urlString = String.format("http://localhost:8081/api/injured-elephants/remove?lat=%f&lon=%f", lat, lon);
+            java.net.URL url = new java.net.URL(urlString);
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("DELETE"); // HTTP DELETE method
+
+            int code = conn.getResponseCode();
+            if (code == 200 || code == 204) {
+                JOptionPane.showMessageDialog(this, "Success: Removed from Database!");
+            } else {
+                System.out.println("Backend Delete Failed. Code: " + code);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Backend Connection Failed during Delete!");
         }
     }
 
