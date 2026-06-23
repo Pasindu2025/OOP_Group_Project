@@ -27,7 +27,6 @@ public class changePassword extends javax.swing.JFrame {
      */
     public changePassword() {
         initComponents();
-        // Submit button එකට action listener එකක් manually connect කරනවා
         submitBtn.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 submitBtnActionPerformed(evt);
